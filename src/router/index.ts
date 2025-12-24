@@ -6,6 +6,7 @@ import {
   createWebHistory,
 } from 'vue-router';
 import routes from './routes';
+import { useUserStore } from 'src/stores/user-store';
 
 /*
  * If not building with SSR mode, you can
@@ -31,6 +32,18 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     // quasar.conf.js -> build -> vueRouterMode
     // quasar.conf.js -> build -> publicPath
     history: createHistory(process.env.VUE_ROUTER_BASE),
+  });
+
+  Router.beforeEach((to, from, next) => {
+    const userStore = useUserStore();
+    if (!userStore.isAuth && to.path !== '/login') {
+      next('/login');
+    }
+    next();
+  });
+
+  Router.afterEach((to) => {
+    document.title = to.meta.title ? (to.meta.title as string) : 'Admin Panel';
   });
 
   return Router;
