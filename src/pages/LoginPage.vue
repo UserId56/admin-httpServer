@@ -4,8 +4,8 @@
             <div class="text-h6">Авторизация</div>
             <q-separator color="black" class="q-mt-md" />
             <q-form class="q-gutter-md q-mt-md">
-                <q-input filled label="Имя пользователя/email" v-model.trim="login" name="login" />
-                <q-input filled label="Пароль" type="password" v-model.trim="password" name="password" />
+                <q-input outlined placeholder="Имя пользователя/email" v-model.trim="login" name="login" />
+                <q-input outlined placeholder="Пароль" type="password" v-model.trim="password" name="password" />
                 <q-btn label="Войти" color="primary" @click="onLogin" :loading="loading" :disable="!validation" />
             </q-form>
         </q-card-section>
