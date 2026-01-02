@@ -82,12 +82,7 @@ export default defineConfig((/* ctx */) => {
       // https: true,
       open: true, // opens browser window automatically
       proxy: {
-        '/user': {
-          target: 'http://127.0.0.1:3000',
-          changeOrigin: true,
-          secure: false,
-        },
-        '/scheme': {
+        '/api': {
           target: 'http://127.0.0.1:3000',
           changeOrigin: true,
           secure: false,
@@ -110,7 +105,7 @@ export default defineConfig((/* ctx */) => {
       // directives: [],
 
       // Quasar plugins
-      plugins: ['LocalStorage', 'SessionStorage', 'Notify'],
+      plugins: ['LocalStorage', 'SessionStorage', 'Notify', 'Dialog'],
     },
 
     // animations: 'all', // --- includes all animations

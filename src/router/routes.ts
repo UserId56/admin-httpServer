@@ -5,7 +5,21 @@ const routes: RouteRecordRaw[] = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { name: 'collections', path: '/collections', component: () => import('pages/IndexPage.vue') },
+      {
+        name: 'collections',
+        path: 'collections',
+        component: () => import('pages/IndexPage.vue'),
+      },
+      {
+        name: 'collection',
+        path: 'collections/:name',
+        component: () => import('pages/CollectionItemsPage.vue'),
+      },
+      {
+        name: 'collection-new-item',
+        path: 'collections/:name/new',
+        component: () => import('pages/CollectionNewItemPage.vue'),
+      },
     ],
   },
   {

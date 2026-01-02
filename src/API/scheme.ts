@@ -16,7 +16,7 @@ export const getSchemes = async (take: number, skip: number): Promise<Array<Sche
 
 export const getSchemeByName = async (name: string): Promise<Scheme | null> => {
   try {
-    const resp = await api.get<Scheme>(`/scheme/` + name);
+    const resp = await api.get(`/scheme/` + name);
     const data = resp.data;
     return data;
   } catch (err) {
@@ -27,7 +27,7 @@ export const getSchemeByName = async (name: string): Promise<Scheme | null> => {
 
 export const createScheme = async (scheme: Partial<Scheme>): Promise<Scheme | null> => {
   try {
-    const resp = await api.post<Scheme>('/scheme', scheme);
+    const resp = await api.post('/scheme', scheme);
     const data = resp.data;
     return data;
   } catch (err) {
@@ -38,7 +38,7 @@ export const createScheme = async (scheme: Partial<Scheme>): Promise<Scheme | nu
 
 export const updateScheme = async (id: number, scheme: Partial<Scheme>): Promise<Scheme | null> => {
   try {
-    const resp = await api.put<Scheme>(`/scheme/` + id, scheme);
+    const resp = await api.put(`/scheme/` + id, scheme);
     const data = resp.data;
     return data;
   } catch (err) {

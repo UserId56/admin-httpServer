@@ -66,6 +66,7 @@ export default defineConfigWithVueTs(
     rules: {
       'prefer-promise-reject-errors': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-redundant-type-constituents': 'off',
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
 
       // allow debugger during development only
