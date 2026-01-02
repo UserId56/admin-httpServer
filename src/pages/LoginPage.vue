@@ -46,7 +46,9 @@ const onLogin = async () => {
     await userStore.login(data);
     if (userStore.isAuth) {
         document.body.style.backgroundColor = '';
-        await router.push('/');
+        await router.push({
+            name: 'collections'
+        });
     }
     loading.value = false;
 };

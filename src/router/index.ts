@@ -7,6 +7,7 @@ import {
 } from 'vue-router';
 import routes from './routes';
 import { useUserStore } from 'src/stores/user-store';
+import { loadStoredToken } from 'src/API/http';
 
 /*
  * If not building with SSR mode, you can
@@ -34,10 +35,46 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
-  Router.beforeEach((to, from, next) => {
+  Router.beforeEach(async (to, from, next) => {
+    console.log('Router beforeEach');
     const userStore = useUserStore();
+
+    if (!userStore.isAuth) {
+      const ok = loadStoredToken();
+      if (ok) {
+        try {
+          await userStore.getProfile();
+        } catch (error: any) {
+          console.error('Error in getProfile during router guard:', error);
+          if (error.response?.status === 401) {
+            userStore.setNotAuth();
+            next('/login');
+            return;
+          }
+        }
+        userStore.setAuth();
+      }
+    }
+
     if (!userStore.isAuth && to.path !== '/login') {
       next('/login');
+      return;
+    }
+    if (to.path === '/') {
+      next({
+        name: 'collections',
+      });
+      return;
+    }
+    if (userStore.isAuth && to.path === '/login') {
+      next({
+        name: 'collections',
+      });
+      return;
+    }
+    if (to.fullPath === '/collections/users' || to.fullPath === '/collections/roles') {
+      next(to.fullPath.replace('/collections', ''));
+      return;
     }
     next();
   });
