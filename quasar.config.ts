@@ -19,7 +19,7 @@ export default defineConfig((/* ctx */) => {
     // https://github.com/quasarframework/quasar/tree/dev/extras
     extras: [
       // 'ionicons-v4',
-      // 'mdi-v7',
+      'mdi-v7',
       // 'fontawesome-v6',
       // 'eva-icons',
       // 'themify',
@@ -83,6 +83,11 @@ export default defineConfig((/* ctx */) => {
       open: true, // opens browser window automatically
       proxy: {
         '/user': {
+          target: 'http://127.0.0.1:3000',
+          changeOrigin: true,
+          secure: false,
+        },
+        '/scheme': {
           target: 'http://127.0.0.1:3000',
           changeOrigin: true,
           secure: false,

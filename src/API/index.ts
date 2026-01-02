@@ -1,2 +1,3 @@
 export * as AuthAPI from './auth';
-export { login, logout } from './auth';
+export * as SchemeAPI from './scheme';
+export * as ObjectAPI from './object';

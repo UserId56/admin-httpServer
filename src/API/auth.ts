@@ -2,6 +2,7 @@ import { api } from '../boot/axios';
 import type { AxiosError } from 'axios';
 import type { LoginParams, AuthResponse, User } from './models/Auth';
 import { setAuthToken, handleApiError } from './http';
+import type { User as UserProfile } from 'src/models/user';
 
 // Методы API для аутентификации
 
@@ -25,6 +26,17 @@ export const logout = async () => {
     handleApiError(err as AxiosError);
   } finally {
     setAuthToken(null);
+  }
+};
+
+export const getProfile = async (): Promise<UserProfile | null | AxiosError> => {
+  try {
+    const resp = await api.get<UserProfile>('/user/profile');
+    const data = resp.data;
+    return data;
+  } catch (err) {
+    handleApiError(err as AxiosError);
+    return err as null;
   }
 };
 
