@@ -1,19 +1,16 @@
 <template>
-    <q-table :rows="props.rows" :columns="props.columns" row-key="id" selection="multiple"
-        v-model:selected="selectedLocal" separator="cell" rows-per-page-label="Элементов на странице"
-        :pagination-label="setCountTitle" :rows-per-page-options="[25, 50, 100, 200, 500, 1000]" @row-click="go"
-        v-model:pagination="paginationProxy" @request="updatePag">
+    <q-table :rows="props.rows" :columns="props.columns" :row-key="(row) => row.id ? row.id : row.ID"
+        :selection="(route.name === 'collections') ? 'single' : 'multiple'" v-model:selected="selectedLocal"
+        separator="cell" rows-per-page-label="Элементов на странице" :pagination-label="setCountTitle"
+        :rows-per-page-options="[25, 50, 100, 200, 500, 1000]" @row-click="go" v-model:pagination="paginationProxy"
+        @request="updatePag">
         <template #top>
             <div>
                 <div class="text-h6 q-pa-sm">{{ props.title }}</div>
                 <q-btn-group>
                     <q-btn color="positive" glossy no-caps label="Создать" :disable="disableBtn.create"
-                        @click="() => router.push({ name: 'collection-new-item', params: { name: route.params.name } })" />
-                    <q-btn color="secondary" glossy no-caps label="Изменить" :disable="disableBtn.edit" @click="() => router.push({
-                        name: 'collection-item-edit',
-                        // @ts-ignore
-                        params: { name: route.params.name, id: selectedLocal[0].id }
-                    })" />
+                        @click="create" />
+                    <q-btn color="secondary" glossy no-caps label="Изменить" :disable="disableBtn.edit" @click="edit" />
                     <q-btn color="negative" glossy no-caps label="Удалить" :disable="disableBtn.delete"
                         @click="deleteElement" />
                     <q-btn color="deep-orange-9" glossy no-caps label="Восстановить" v-show="!disableBtn.recover"
@@ -168,6 +165,33 @@ const go = async (evt: Event, row: Row, _: number) => {
         if (row && row?.id) {
             await router.push(`/collections/${route.params.name as string}/${row?.id}`);
             return;
+        }
+    }
+};
+
+const create = async () => {
+    if (route.name === 'collections') {
+        await router.push({ name: 'collection-new-collection' });
+        return;
+    }
+    await router.push({ name: 'collection-new-item', params: { name: route.params.name } });
+};
+
+const edit = async () => {
+    if (route.name === 'collections') {
+        if (selectedLocal.value.length === 1) {
+            // @ts-expect-error Бесит
+            await router.push({ name: 'collection-edit-collection', params: { name: selectedLocal.value[0].name } });
+        }
+        return;
+    }
+    if (route.name === 'collection') {
+        if (selectedLocal.value.length === 1) {
+            await router.push({
+                name: 'collection-item-edit',
+                // @ts-expect-error Бесит
+                params: { name: route.params.name, id: selectedLocal.value[0].id }
+            });
         }
     }
 };

@@ -5,7 +5,7 @@ import type { Scheme } from 'src/models/scheme';
 
 export const getSchemes = async (take: number, skip: number): Promise<Array<Scheme> | null> => {
   try {
-    const resp = await api.get<Array<Scheme>>('/scheme' + `?take=` + take + `&skip=` + skip);
+    const resp = await api.get<Array<Scheme>>('/scheme/' + `?take=` + take + `&skip=` + skip);
     const data = resp.data;
     return data;
   } catch (err) {
@@ -27,7 +27,9 @@ export const getSchemeByName = async (name: string): Promise<Scheme | null> => {
 
 export const createScheme = async (scheme: Partial<Scheme>): Promise<Scheme | null> => {
   try {
-    const resp = await api.post('/scheme', scheme);
+    const resp = await api.post('/scheme/', scheme, {
+      headers: { 'Content-Type': 'application/json' },
+    });
     const data = resp.data;
     return data;
   } catch (err) {
@@ -36,9 +38,9 @@ export const createScheme = async (scheme: Partial<Scheme>): Promise<Scheme | nu
   }
 };
 
-export const updateScheme = async (id: number, scheme: Partial<Scheme>): Promise<Scheme | null> => {
+export const updateScheme = async (scheme: Partial<Scheme>): Promise<Scheme | null> => {
   try {
-    const resp = await api.put(`/scheme/` + id, scheme);
+    const resp = await api.put(`/scheme/` + scheme.name, scheme);
     const data = resp.data;
     return data;
   } catch (err) {
@@ -46,9 +48,9 @@ export const updateScheme = async (id: number, scheme: Partial<Scheme>): Promise
     return null;
   }
 };
-export const deleteScheme = async (id: number): Promise<boolean> => {
+export const deleteScheme = async (name: string): Promise<boolean> => {
   try {
-    await api.delete(`/scheme/` + id);
+    await api.delete(`/scheme/` + name);
     return true;
   } catch (err) {
     handleApiError(err as AxiosError);
