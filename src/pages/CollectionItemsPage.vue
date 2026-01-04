@@ -1,7 +1,7 @@
 <template>
     <q-page class="q-pa-md column">
         <TableElement :columns="columns" :rows="row" :title="schemeData.displayName" v-model:pagination="pagination"
-            @delete-rows="handleDeleteRows" v-model:selected="selected" />
+            @delete-rows="handleDeleteRows" v-model:selected="selected" @recover-rows="handleRecoverRows" />
     </q-page>
 </template>
 
@@ -20,11 +20,11 @@ const collectionName = route.params.name as string;
 const columns = ref<Column[]>([]);
 const row = ref([]);
 const pagination = ref({
-    descending: false,
+    descending: true,
     page: 1,
     rowsPerPage: 25,
     rowsNumber: 0,
-    sortBy: '',
+    sortBy: 'updated_at',
 });
 const schemeData = ref<Scheme>({
     displayName: '',
@@ -112,13 +112,51 @@ const handleDeleteRows = async () => {
                 console.warn('Нет идентификатора у строки, пропускаю', r);
                 continue;
             }
-            console.log('delete request for id', id);
             await ObjectAPI.deleteObject(collectionName, id);
         }
         selected.value = [];
         await getPageData();
     } catch (err) {
         console.error('handleDeleteRows error', err);
+    }
+}
+
+const handleRecoverRows = async () => {
+    try {
+        const confirmed = await new Promise<boolean>((resolve) => {
+            Dialog.create({
+                title: 'Подтверждение',
+                message: `Вы уверены, что хотите восстановить ${selected.value.length} элементов?`,
+                cancel: {
+                    label: 'Отмена',
+                    push: true
+                },
+                ok: {
+                    label: 'Восстановить',
+                    color: 'deep-orange-9',
+                    push: true
+                },
+                persistent: true
+            })
+                .onOk(() => resolve(true))
+                .onCancel(() => resolve(false))
+                .onDismiss(() => resolve(false));
+        });
+
+        if (!confirmed) return;
+
+        for (const r of selected.value) {
+            const id = r.id ?? r.ID ?? r._id;
+            if (!id) {
+                console.warn('Нет идентификатора у строки, пропускаю', r);
+                continue;
+            }
+            await ObjectAPI.recoverObject(collectionName, id);
+        }
+        selected.value = [];
+        await getPageData();
+    } catch (err) {
+        console.error('handleRecoverRows error', err);
     }
 }
 

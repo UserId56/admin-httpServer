@@ -20,6 +20,16 @@ const routes: RouteRecordRaw[] = [
         path: 'collections/:name/new',
         component: () => import('pages/CollectionNewItemPage.vue'),
       },
+      {
+        name: 'collection-item',
+        path: 'collections/:name/:id',
+        component: () => import('pages/CollectionNewItemPage.vue'),
+      },
+      {
+        name: 'collection-item-edit',
+        path: 'collections/:name/:id/edit',
+        component: () => import('pages/CollectionNewItemPage.vue'),
+      },
     ],
   },
   {

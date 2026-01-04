@@ -9,9 +9,15 @@
                 <q-btn-group>
                     <q-btn color="positive" glossy no-caps label="Создать" :disable="disableBtn.create"
                         @click="() => router.push({ name: 'collection-new-item', params: { name: route.params.name } })" />
-                    <q-btn color="secondary" glossy no-caps label="Изменить" :disable="disableBtn.edit" />
+                    <q-btn color="secondary" glossy no-caps label="Изменить" :disable="disableBtn.edit" @click="() => router.push({
+                        name: 'collection-item-edit',
+                        // @ts-ignore
+                        params: { name: route.params.name, id: selectedLocal[0].id }
+                    })" />
                     <q-btn color="negative" glossy no-caps label="Удалить" :disable="disableBtn.delete"
                         @click="deleteElement" />
+                    <q-btn color="deep-orange-9" glossy no-caps label="Восстановить" v-show="!disableBtn.recover"
+                        @click="recoverElement" />
                 </q-btn-group>
             </div>
         </template></q-table>
@@ -59,6 +65,7 @@ const disableBtn = ref({
     create: false,
     edit: true,
     delete: true,
+    recover: true,
 });
 
 // Сигнатура эмита (типы для TypeScript)
@@ -67,6 +74,7 @@ const emit = defineEmits<{
     (e: 'update:pagination', pagination: any): void;
     (e: 'update:selected', selected: Row[]): void;
     (e: 'delete-rows'): void;
+    (e: 'recover-rows'): void;
 }>();
 
 // Локальное состояние выделенных строк
@@ -107,6 +115,7 @@ watch(selectedLocal, (val) => {
             disableBtn.value.edit = true;
             disableBtn.value.delete = true;
             disableBtn.value.create = false;
+            disableBtn.value.recover = true;
             break;
         case 1:
             disableBtn.value.edit = false;
@@ -119,6 +128,14 @@ watch(selectedLocal, (val) => {
             disableBtn.value.create = true;
             break;
     }
+    for (const item of val) {
+        if (item.deleted_at === null || item.deleted_at === undefined || item.deleted_at === '') {
+            disableBtn.value.recover = true;
+            return;
+        } else {
+            disableBtn.value.recover = false;
+        }
+    }
     emit('selection-change', Array.isArray(val) ? val.length : 0);
 });
 
@@ -127,6 +144,13 @@ watch(selectedLocal, (val) => {
 const deleteElement = () => {
     if (selectedLocal.value.length > 0) {
         emit('delete-rows');
+    }
+};
+
+// ВОССТАНОВЛЕНИЕ ЭЛЕМЕНТОВ
+const recoverElement = () => {
+    if (selectedLocal.value.length > 0) {
+        emit('recover-rows');
     }
 };
 

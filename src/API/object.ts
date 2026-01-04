@@ -56,3 +56,16 @@ export const deleteObject = async (nameCollection: string, id: number): Promise<
     return false;
   }
 };
+
+export const recoverObject = async (nameCollection: string, id: number): Promise<boolean> => {
+  try {
+    const object = {
+      deleted_at: null,
+    };
+    await api.put('/object/' + nameCollection + '/' + id, object);
+    return true;
+  } catch (err) {
+    handleApiError(err as AxiosError);
+    return false;
+  }
+};
