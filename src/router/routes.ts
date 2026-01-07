@@ -40,6 +40,31 @@ const routes: RouteRecordRaw[] = [
         path: 'collections/:name/edit',
         component: () => import('pages/CollectionNewCollectionPage.vue'),
       },
+      {
+        name: 'users',
+        path: '/users',
+        component: () => import('pages/UsersPage.vue'),
+      },
+      {
+        name: 'roles',
+        path: '/roles',
+        component: () => import('pages/RolesPage.vue'),
+      },
+      {
+        name: 'roles-item-new',
+        path: '/roles/new',
+        component: () => import('pages/RoleNewPage.vue'),
+      },
+      {
+        name: 'roles-item-edit',
+        path: '/roles/:ID/edit',
+        component: () => import('pages/RoleNewPage.vue'),
+      },
+      {
+        name: 'roles-item',
+        path: '/roles/:ID',
+        component: () => import('pages/RoleNewPage.vue'),
+      },
     ],
   },
   {

@@ -1,9 +1,9 @@
 <template>
     <q-table :rows="props.rows" :columns="props.columns" :row-key="(row) => row.id ? row.id : row.ID"
-        :selection="(route.name === 'collections') ? 'single' : 'multiple'" v-model:selected="selectedLocal"
-        separator="cell" rows-per-page-label="Элементов на странице" :pagination-label="setCountTitle"
-        :rows-per-page-options="[25, 50, 100, 200, 500, 1000]" @row-click="go" v-model:pagination="paginationProxy"
-        @request="updatePag">
+        :selection="(route.name === 'collections' || route.name === 'roles') ? 'single' : 'multiple'"
+        v-model:selected="selectedLocal" separator="cell" rows-per-page-label="Элементов на странице"
+        :pagination-label="setCountTitle" :rows-per-page-options="[25, 50, 100, 200, 500, 1000]" @row-click="go"
+        v-model:pagination="paginationProxy" @request="updatePag">
         <template #top>
             <div>
                 <div class="text-h6 q-pa-sm">{{ props.title }}</div>
@@ -167,6 +167,12 @@ const go = async (evt: Event, row: Row, _: number) => {
             return;
         }
     }
+    if (route.name === 'roles') {
+        if (row && row?.ID) {
+            await router.push(`/roles/${row?.ID}`);
+            return;
+        }
+    }
 };
 
 const create = async () => {
@@ -174,7 +180,12 @@ const create = async () => {
         await router.push({ name: 'collection-new-collection' });
         return;
     }
-    await router.push({ name: 'collection-new-item', params: { name: route.params.name } });
+    if (route.name === 'collection') {
+        await router.push({ name: 'collection-new-item', params: { name: route.params.name } });
+    }
+    if (route.name === 'roles') {
+        await router.push({ name: 'roles-item-new' });
+    }
 };
 
 const edit = async () => {
@@ -192,6 +203,12 @@ const edit = async () => {
                 // @ts-expect-error Бесит
                 params: { name: route.params.name, id: selectedLocal.value[0].id }
             });
+        }
+    }
+    if (route.name === 'roles') {
+        if (selectedLocal.value.length === 1) {
+            // @ts-expect-error Бесит
+            await router.push({ name: 'roles-item-edit', params: { ID: selectedLocal.value[0].ID } });
         }
     }
 };
