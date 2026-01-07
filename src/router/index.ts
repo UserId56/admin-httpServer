@@ -72,8 +72,12 @@ export default defineRouter(function (/* { store, ssrContext } */) {
       });
       return;
     }
-    if (to.fullPath === '/collections/users' || to.fullPath === '/collections/roles') {
+    if (to.fullPath === '/collections/users') {
       next(to.fullPath.replace('/collections', ''));
+      return;
+    }
+    if (to.fullPath === '/collections/roles') {
+      next({ name: 'roles' });
       return;
     }
     next();
