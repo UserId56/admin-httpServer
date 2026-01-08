@@ -173,6 +173,12 @@ const go = async (evt: Event, row: Row, _: number) => {
             return;
         }
     }
+    if (route.name === 'users') {
+        if (row && row?.id) {
+            await router.push(`/users/${row?.id}`);
+            return;
+        }
+    }
 };
 
 const create = async () => {
@@ -185,6 +191,9 @@ const create = async () => {
     }
     if (route.name === 'roles') {
         await router.push({ name: 'roles-item-new' });
+    }
+    if (route.name === 'users') {
+        await router.push({ name: 'users-item-new' });
     }
 };
 
@@ -209,6 +218,12 @@ const edit = async () => {
         if (selectedLocal.value.length === 1) {
             // @ts-expect-error Бесит
             await router.push({ name: 'roles-item-edit', params: { ID: selectedLocal.value[0].ID } });
+        }
+    }
+    if (route.name === 'users') {
+        if (selectedLocal.value.length === 1) {
+            // @ts-expect-error Бесит
+            await router.push({ name: 'users-item-edit', params: { id: selectedLocal.value[0].id } });
         }
     }
 };
