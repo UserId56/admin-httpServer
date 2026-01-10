@@ -13,7 +13,7 @@ import { Dialog } from 'quasar';
 import { RoleAPI } from 'src/API';
 
 const columns: Column[] = [
-    { name: 'ID', label: 'ID', field: 'ID', sortable: true, align: 'left' },
+    { name: 'id', label: 'ID', field: 'id', sortable: true, align: 'left' },
     { name: 'name', label: 'Название', field: 'name', sortable: true, align: 'left' },
 ]
 const row = ref<Array<any>>([]);

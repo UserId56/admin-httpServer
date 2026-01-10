@@ -72,12 +72,12 @@ const routes: RouteRecordRaw[] = [
       },
       {
         name: 'roles-item-edit',
-        path: '/roles/:ID/edit',
+        path: '/roles/:id/edit',
         component: () => import('pages/RoleNewPage.vue'),
       },
       {
         name: 'roles-item',
-        path: '/roles/:ID',
+        path: '/roles/:id',
         component: () => import('pages/RoleNewPage.vue'),
       },
     ],

@@ -1,5 +1,5 @@
 export interface Column {
-  ID?: number;
+  id?: number;
   CreatedAt?: string | null;
   UpdatedAt?: string | null;
   DeletedAt?: string | null;
@@ -15,7 +15,7 @@ export interface Column {
 }
 
 export interface Scheme {
-  ID?: number;
+  id?: number;
   CreatedAt?: string | null;
   UpdatedAt?: string | null;
   DeletedAt?: string | null;

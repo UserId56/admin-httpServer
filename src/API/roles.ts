@@ -42,7 +42,7 @@ export const createRole = async (role: Partial<Role>): Promise<Role | null> => {
 
 export const updateRole = async (role: Partial<Role>): Promise<Role | null> => {
   try {
-    const resp = await api.put(`/role/` + role.ID, role, {
+    const resp = await api.put(`/role/` + role.id, role, {
       headers: { 'Content-Type': 'application/json' },
     });
     const data = resp.data;

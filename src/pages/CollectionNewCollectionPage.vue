@@ -50,7 +50,7 @@ const route = useRoute();
 const schemeStore = useSchemeStore();
 
 const collection = ref<Partial<Scheme>>({
-    ID: 0,
+    id: 0,
     CreatedAt: '',
     UpdatedAt: '',
     name: '',
@@ -71,11 +71,11 @@ const addColumn = () => {
         collection.value.columns = [];
     }
     collection.value.columns.push({
-        ID: 0,
+        id: 0,
         CreatedAt: null,
         UpdatedAt: null,
         DeletedAt: null,
-        dynamic_table_id: collection.value.ID,
+        dynamic_table_id: collection.value.id,
         column_name: 'new_column_' + (collection.value.columns.length + 1),
         display_name: 'New Column ' + (collection.value.columns.length + 1),
         data_type: 'TEXT',
@@ -92,12 +92,12 @@ const create = async () => {
             await SchemeAPI.updateScheme(collection.value);
             await router.push({ name: 'collections' });
         } else {
-            delete collection.value.ID;
+            delete collection.value.id;
             delete collection.value.CreatedAt;
             delete collection.value.UpdatedAt;
             delete collection.value.DeletedAt;
             for (const column of collection.value.columns || []) {
-                delete column.ID;
+                delete column.id;
                 delete column.CreatedAt;
                 delete column.UpdatedAt;
                 delete column.DeletedAt;

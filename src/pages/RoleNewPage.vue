@@ -50,7 +50,7 @@ const onSave = async () => {
             await router.push({ name: 'roles' });
         });
     } else if (route.name === 'roles-item-edit') {
-        newRole.ID = Number(route.params.ID);
+        newRole.id = Number(route.params.id);
         await RoleAPI.updateRole(newRole).then(async () => {
             await router.push({ name: 'roles' });
         });
@@ -59,7 +59,7 @@ const onSave = async () => {
 
 onMounted(async () => {
     if (route.name === 'roles-item-edit' || route.name === 'roles-item') {
-        const roleId = Number(route.params.ID);
+        const roleId = Number(route.params.id);
         const roleData = await RoleAPI.getRoleById(roleId);
         if (roleData) {
             roleName.value = roleData.name;

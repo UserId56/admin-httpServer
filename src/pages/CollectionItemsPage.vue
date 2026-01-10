@@ -14,6 +14,8 @@ import { ref, onMounted, watch } from 'vue';
 import type { Scheme, Column as SchemeColumn } from 'src/models/scheme';
 import type { ReqData } from 'src/models/query';
 import { Dialog } from 'quasar';
+import { useUserStore } from 'src/stores/user-store';
+const userStore = useUserStore();
 
 const route = useRoute();
 const collectionName = route.params.name as string;
@@ -30,6 +32,10 @@ const schemeData = ref<Scheme>({
     display_name: '',
 } as Scheme);
 
+const include: string[] = [];
+
+const permission = userStore.permission;
+
 const getPageData = async () => {
 
     // Загружаем данные объектов из этой коллекции
@@ -37,6 +43,7 @@ const getPageData = async () => {
         take: pagination.value.rowsPerPage,
         skip: (pagination.value.page - 1) * pagination.value.rowsPerPage,
         count: true,
+        include: include,
     }
     if (pagination.value.sortBy) {
         reqData.order = [{
@@ -64,6 +71,10 @@ onMounted(async () => {
         // Формируем колонки таблицы на основе полей схемы
         if (data.columns) {
             data.columns.forEach((field: SchemeColumn) => {
+                if (permission && permission.includes(`${collectionName}.${field.column_name}.forbidden`)) {
+                    return;
+                }
+                include.push(field.column_name);
                 columns.value.push({
                     name: field.column_name,
                     label: field.display_name,
@@ -125,8 +136,10 @@ const handleDeleteRows = async () => {
     }
 }
 
-watch(pagination, async () => {
-    await getPageData();
+watch(pagination, async (oldData, newData) => {
+    if (oldData.page !== newData.page || oldData.rowsPerPage !== newData.rowsPerPage || oldData.sortBy !== newData.sortBy || oldData.descending !== newData.descending) {
+        await getPageData();
+    }
 });
 
 </script>

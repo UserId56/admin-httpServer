@@ -8,12 +8,14 @@ import { LocalStorage } from 'quasar';
 interface UserStore {
   user: User | null;
   isAuth: boolean;
+  permission: Array<string> | null;
 }
 
 export const useUserStore = defineStore('user', {
   state: (): UserStore => ({
     user: null as User | null,
     isAuth: false,
+    permission: null as Array<string> | null,
   }),
   getters: {},
   actions: {
@@ -43,6 +45,9 @@ export const useUserStore = defineStore('user', {
     },
     setAuth() {
       this.isAuth = true;
+    },
+    setPermission(permission: Array<string> | null) {
+      this.permission = permission;
     },
     setNotAuth() {
       this.isAuth = false;

@@ -6,10 +6,6 @@ export interface User {
   role_id: number;
 }
 
-export interface AuthResponse {
-  user: User | null;
-}
-
 export interface LoginParams {
   username: string;
   email: string;

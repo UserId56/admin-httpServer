@@ -1,18 +1,32 @@
 import { api } from '../boot/axios';
 import type { AxiosError } from 'axios';
-import type { LoginParams, AuthResponse, User } from './models/Auth';
-import { setAuthToken, handleApiError } from './http';
+import type { LoginParams, User } from './models/Auth';
+import { setAuthToken, handleApiError, setPermission, setRoleId } from './http';
 import type { User as UserProfile } from 'src/models/user';
+import type Role from 'src/models/roles';
 
 // Методы API для аутентификации
 
+const getRolePermissions = async (roleId: number): Promise<Array<string> | null> => {
+  try {
+    const resp = await api.get<Role>(`/role/` + roleId);
+    return resp.data.permission;
+  } catch (err) {
+    handleApiError(err as AxiosError);
+    return null;
+  }
+};
+
 export const login = async (params: LoginParams): Promise<User | null> => {
   try {
-    const resp = await api.post<AuthResponse>('/user/login', params);
+    const resp = await api.post<User>('/user/login', params);
     const data = resp.data;
     // Сохраняем токен и ставим заголовок
-    setAuthToken(data.user?.access_token || null);
-    return data.user;
+    setAuthToken(data.access_token || null);
+    setRoleId(data.role_id || null);
+    const permission = await getRolePermissions(data.role_id);
+    setPermission(permission);
+    return data;
   } catch (err) {
     handleApiError(err as AxiosError);
     return null;

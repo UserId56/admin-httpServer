@@ -168,8 +168,8 @@ const go = async (evt: Event, row: Row, _: number) => {
         }
     }
     if (route.name === 'roles') {
-        if (row && row?.ID) {
-            await router.push(`/roles/${row?.ID}`);
+        if (row && row?.id) {
+            await router.push(`/roles/${row?.id}`);
             return;
         }
     }
@@ -217,7 +217,7 @@ const edit = async () => {
     if (route.name === 'roles') {
         if (selectedLocal.value.length === 1) {
             // @ts-expect-error Бесит
-            await router.push({ name: 'roles-item-edit', params: { ID: selectedLocal.value[0].ID } });
+            await router.push({ name: 'roles-item-edit', params: { id: selectedLocal.value[0].id } });
         }
     }
     if (route.name === 'users') {

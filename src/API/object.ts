@@ -1,8 +1,9 @@
 import { api } from '../boot/axios';
 import type { AxiosError } from 'axios';
 import { handleApiError } from './http';
+import type { ReqData } from 'src/models/query';
 
-export const getObject = async (nameCollection: string, reqData: any): Promise<any | null> => {
+export const getObject = async (nameCollection: string, reqData: ReqData): Promise<any | null> => {
   try {
     const resp = await api.post<Array<any>>('/object/' + nameCollection + '/query', reqData);
     return resp;

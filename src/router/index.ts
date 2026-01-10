@@ -40,7 +40,7 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     const userStore = useUserStore();
 
     if (!userStore.isAuth) {
-      const ok = loadStoredToken();
+      const ok = await loadStoredToken();
       if (ok) {
         try {
           await userStore.getProfile();
