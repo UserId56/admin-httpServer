@@ -15,18 +15,22 @@ import type { Column } from 'components/TableElements.vue';
 import type { Role } from 'src/models/roles';
 import type { ReqData } from 'src/models/query';
 import { useUserStore } from 'src/stores/user-store';
+import { LocalStorage } from 'quasar';
+import { useRoute, useRouter } from 'vue-router';
 
 const userStore = useUserStore();
+const route = useRoute();
+const router = useRouter();
 
 const columns = ref<Column[]>([]);
 const row = ref<Array<any>>([]);
 const selected = ref<Array<any>>([]);
 const pagination = ref({
-    descending: false,
+    descending: true,
     page: 1,
     rowsPerPage: 25,
     rowsNumber: 0,
-    sortBy: '',
+    sortBy: 'Костыль, не хочет работать ни как',
 });
 const includedColumns: string[] = []
 const roles = ref<Array<Role>>([]);
@@ -56,6 +60,17 @@ onMounted(async () => {
     const rolesData = await RoleAPI.getRoles(1000, 0);
     if (rolesData) {
         roles.value = rolesData;
+    }
+    const loadPagination = LocalStorage.getItem('users-pagination');
+    const page = route.query.page;
+    if (loadPagination) {
+        if (page) {
+            (loadPagination as typeof pagination.value).page = parseInt(page as string);
+        }
+        pagination.value = loadPagination as typeof pagination.value;
+        return;
+    } else {
+        pagination.value.sortBy = ''
     }
     pagination.value.rowsNumber = await onRequest();
 });
@@ -109,8 +124,25 @@ const onRequest = async (): Promise<number> => {
     return 0;
 }
 
-watch(pagination, async (oldValue, newValue) => {
+watch(pagination, async (newValue, oldValue) => {
+    if (newValue.page !== oldValue.page) {
+        const target = {
+            name: route.name as string,
+            params: { ...route.params },
+            query: { ...route.query, page: newValue.page.toString() }
+        };
+        try {
+            // replace — чтобы не плодить историю, или push если нужно
+            await router.push(target);
+        } catch (err) {
+            console.error('Router navigation error:', err);
+        }
+    }
+
     if (oldValue.page !== newValue.page || oldValue.rowsPerPage !== newValue.rowsPerPage || oldValue.sortBy !== newValue.sortBy || oldValue.descending !== newValue.descending) {
+        const savePagination = { ...pagination.value };
+        savePagination.page = 1;
+        LocalStorage.set('users-pagination', savePagination);
         pagination.value.rowsNumber = await onRequest();
     }
 });

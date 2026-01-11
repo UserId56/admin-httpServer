@@ -11,6 +11,7 @@ import type { Column } from 'components/TableElements.vue';
 import { onMounted, ref, watch } from 'vue';
 import { Dialog } from 'quasar';
 import { RoleAPI } from 'src/API';
+import { LocalStorage } from 'quasar';
 
 const columns: Column[] = [
     { name: 'id', label: 'ID', field: 'id', sortable: true, align: 'left' },
@@ -23,8 +24,16 @@ const pagination = ref({
     page: 1,
     rowsPerPage: 25,
     numberOfPages: 0,
+    sortBy: 'Костыль, не хочет работать ни как',
 });
 onMounted(async () => {
+    const loadPagination = LocalStorage.getItem('roles-pagination');
+    if (loadPagination) {
+        pagination.value = loadPagination as typeof pagination.value;
+        return;
+    } else {
+        pagination.value.sortBy = ''
+    }
     await onRequest();
     pagination.value.numberOfPages = row.value.length;
 });
@@ -68,8 +77,11 @@ const onDelete = async () => {
     }
 };
 
-watch(pagination, async () => {
-    await onRequest();
+watch(pagination, async (oldValue, newValue) => {
+    if (oldValue.page !== newValue.page || oldValue.rowsPerPage !== newValue.rowsPerPage || oldValue.sortBy !== newValue.sortBy || oldValue.descending !== newValue.descending) {
+        LocalStorage.set('roles-pagination', pagination.value);
+        await onRequest();
+    }
 });
 
 const onRequest = async () => {
@@ -81,5 +93,3 @@ const onRequest = async () => {
 };
 
 </script>
-
-<style></style>

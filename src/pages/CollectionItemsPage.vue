@@ -9,24 +9,25 @@
 import TableElement from 'components/TableElements.vue';
 import type { Column } from 'components/TableElements.vue';
 import { ObjectAPI, SchemeAPI } from '../API';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { ref, onMounted, watch } from 'vue';
 import type { Scheme, Column as SchemeColumn } from 'src/models/scheme';
 import type { ReqData } from 'src/models/query';
-import { Dialog } from 'quasar';
+import { Dialog, LocalStorage } from 'quasar';
 import { useUserStore } from 'src/stores/user-store';
 const userStore = useUserStore();
 
 const route = useRoute();
+const router = useRouter();
 const collectionName = route.params.name as string;
 const columns = ref<Column[]>([]);
 const row = ref([]);
 const pagination = ref({
-    descending: false,
+    descending: true,
     page: 1,
     rowsPerPage: 25,
     rowsNumber: 0,
-    sortBy: '',
+    sortBy: 'Костыль, не хочет работать ни как',
 });
 const schemeData = ref<Scheme>({
     display_name: '',
@@ -37,7 +38,7 @@ const include: string[] = [];
 const permission = userStore.permission;
 
 const getPageData = async () => {
-
+    if (!pagination.value) return;
     // Загружаем данные объектов из этой коллекции
     const reqData: ReqData = {
         take: pagination.value.rowsPerPage,
@@ -92,6 +93,17 @@ onMounted(async () => {
                 });
             });
         }
+        const loadPagination = LocalStorage.getItem(`${collectionName}-pagination`);
+        const page = route.query.page;
+        if (loadPagination) {
+            if (page) {
+                (loadPagination as typeof pagination.value).page = parseInt(page as string);
+            }
+            pagination.value = loadPagination as typeof pagination.value;
+            return;
+        } else {
+            pagination.value.sortBy = ''
+        }
         await getPageData();
     }
 });
@@ -136,8 +148,26 @@ const handleDeleteRows = async () => {
     }
 }
 
-watch(pagination, async (oldData, newData) => {
-    if (oldData.page !== newData.page || oldData.rowsPerPage !== newData.rowsPerPage || oldData.sortBy !== newData.sortBy || oldData.descending !== newData.descending) {
+watch(pagination, async (newValue, oldValue) => {
+    if (newValue.page !== oldValue.page) {
+        const target = {
+            name: route.name as string,
+            params: { ...route.params },
+            query: { ...route.query, page: newValue.page.toString() }
+        };
+        try {
+            // replace — чтобы не плодить историю, или push если нужно
+            await router.push(target);
+        } catch (err) {
+            console.error('Router navigation error:', err);
+        }
+    }
+
+    if (newValue.page !== oldValue.page || newValue.rowsPerPage !== oldValue.rowsPerPage ||
+        newValue.sortBy !== oldValue.sortBy || newValue.descending !== oldValue.descending) {
+        const savePagination = { ...pagination.value };
+        savePagination.page = 1;
+        LocalStorage.setItem(`${collectionName}-pagination`, savePagination);
         await getPageData();
     }
 });
