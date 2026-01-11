@@ -24,7 +24,8 @@
                     <q-btn color="primary" :label="route.name === 'collection-new-item' ? 'Создать' : 'Сохранить'"
                         @click="createNewItem(false)"
                         v-if="route.name === 'collection-new-item' || route.name === 'collection-item-edit'" />
-                    <q-btn color="secondary" label="Закрыть" @click="router.back()"></q-btn>
+                    <q-btn color="secondary" label="Закрыть"
+                        @click="router.push({ name: 'collection', params: { name: collectionName } })"></q-btn>
                     <q-btn
                         v-if="route.name === 'collection-new-item' || route.name === 'collection-item-edit' && newItem.deleted_at"
                         label="Восстановить" color="deep-orange-9" @click="createNewItem(true)"></q-btn>

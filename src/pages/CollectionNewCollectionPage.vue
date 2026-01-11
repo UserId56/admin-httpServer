@@ -31,7 +31,8 @@
                 <div class="q-mt-md">
                     <q-btn :label="(route.name === 'collection-edit-collection' ? 'Сохранить' : 'Создать')"
                         type="submit" color="primary" />
-                    <q-btn label="Отмена" @click="router.back()" color="primary" flat class="q-ml-sm" />
+                    <q-btn label="Отмена" @click="router.push({ name: 'collections' })" color="primary" flat
+                        class="q-ml-sm" />
                 </div>
             </q-form>
         </q-card-section>

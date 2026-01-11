@@ -23,7 +23,7 @@
             <q-btn label="Сохранить" color="primary"
                 v-if="route.name === 'roles-item-new' || route.name === 'roles-item-edit'" class="q-mr-sm"
                 @click="onSave"></q-btn>
-            <q-btn label="Отмена" color="secondary" @click="router.back()"></q-btn>
+            <q-btn label="Отмена" color="secondary" @click="router.push({ name: 'roles' })"></q-btn>
         </q-card-section>
     </q-card>
 </template>

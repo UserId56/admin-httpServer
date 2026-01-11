@@ -17,7 +17,7 @@
 
                 <q-btn label="Сохранить" color="primary" @click="onSave"
                     v-if="route.name === 'users-item-new' || route.name === 'users-item-edit'" />
-                <q-btn label="Отмена" color="secondary" @click="router.back()" />
+                <q-btn label="Отмена" color="secondary" @click="router.push({ name: 'users' })" />
             </q-card-actions>
         </q-card-section>
     </q-card>
