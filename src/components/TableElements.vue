@@ -31,6 +31,14 @@ type Row = {
     [key: string]: any;
 };
 
+export interface Pagination {
+    descending: boolean;
+    page: number;
+    rowsPerPage: number;
+    rowsNumber: null | number;
+    sortBy: string | null;
+}
+
 // Тип колонки (упрощённый, можно расширить по необходимости)
 export interface Column {
     name: string;
@@ -82,10 +90,8 @@ const selectedLocal = computed({
 
 // ПАГИНАЦИЯ
 
-
-
 const paginationProxy = computed({
-    get: () => props.pagination ?? { page: 1, rowsPerPage: 25, rowsNumber: 0, descending: false },
+    get: () => props.pagination ?? { page: 1, rowsPerPage: 25, rowsNumber: null, descending: true, sortBy: null },
     set: (val: any) => emit('update:pagination', val)
 });
 
