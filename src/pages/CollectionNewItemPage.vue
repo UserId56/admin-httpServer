@@ -36,7 +36,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { SchemeAPI, ObjectAPI } from '../API';
 import { Notify, Loading } from 'quasar';
@@ -49,6 +49,7 @@ const id = ref<number | null>(null);
 const newItem = ref<{ [key: string]: any }>({});
 
 onMounted(async () => {
+    console.log('Mounted CollectionNewItemPage.vue');
     schemeData.value = await SchemeAPI.getSchemeByName(collectionName);
     for (const column of schemeData.value.columns) {
         if (column.column_name === 'id' || column.column_name === 'created_at' || column.column_name === 'updated_at' || column.column_name === 'deleted_at') {
@@ -66,7 +67,6 @@ const createNewItem = async (recover: boolean = false) => {
     Loading.show()
     try {
         // Здесь должен быть вызов API для создания нового элемента
-        console.log('Создание нового элемента:', newItem.value);
         let notValid = false;
         schemeData.value.columns.forEach((column: any) => {
             if (column.column_name === 'id' || column.column_name === 'created_at' || column.column_name === 'updated_at' || column.column_name === 'deleted_at') {
@@ -111,9 +111,9 @@ const createNewItem = async (recover: boolean = false) => {
             await router.push({ name: 'collection-item', params: { name: collectionName, id: id.value } });
         } else {
             await router.push({ name: 'collection', params: { name: collectionName } });
+            newItem.value = {};
         }
         // После успешного создания можно очистить форму или перенаправить пользователя
-        newItem.value = {};
     } catch (error) {
         console.error('Ошибка при создании элемента:', error);
     } finally {
@@ -121,6 +121,12 @@ const createNewItem = async (recover: boolean = false) => {
     }
 };
 
+watch(id, async (newId) => {
+    if (newId !== null) {
+        const item = await ObjectAPI.getObjectById(collectionName, newId);
+        newItem.value = { ...item };
+    }
+});
 
 </script>
 

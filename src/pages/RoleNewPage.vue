@@ -29,7 +29,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { RoleAPI } from 'src/API';
 import type Role from 'src/models/roles';
@@ -37,6 +37,7 @@ import type Role from 'src/models/roles';
 const router = useRouter();
 const route = useRoute();
 
+const roleId = ref<number | null>(null);
 const roleName = ref('');
 const rolePermissions = ref<Array<string>>([]);
 
@@ -46,28 +47,32 @@ const onSave = async () => {
         permission: rolePermissions.value,
     } as Partial<Role>;
     if (route.name === 'roles-item-new') {
-        await RoleAPI.createRole(newRole).then(async () => {
-            await router.push({ name: 'roles' });
+        await RoleAPI.createRole(newRole).then(async (data: any) => {
+            roleId.value = data.id as number;
+            await router.push({ name: 'roles-item', params: { id: data.id } });
         });
     } else if (route.name === 'roles-item-edit') {
         newRole.id = Number(route.params.id);
         await RoleAPI.updateRole(newRole).then(async () => {
-            await router.push({ name: 'roles' });
+            roleId.value = newRole.id as number;
+            await router.push({ name: 'roles-item', params: { id: newRole.id } });
         });
     }
 };
 
-onMounted(async () => {
+onMounted(() => {
     if (route.name === 'roles-item-edit' || route.name === 'roles-item') {
-        const roleId = Number(route.params.id);
-        const roleData = await RoleAPI.getRoleById(roleId);
-        if (roleData) {
-            roleName.value = roleData.name;
-            rolePermissions.value = roleData.permission || [];
-        }
+        roleId.value = Number(route.params.id);
     }
 });
 
-</script>
 
-<style></style>
+watch(roleId, async (newVal) => {
+    console.log('roleId changed:', newVal);
+    const roleData = await RoleAPI.getRoleById(newVal as number);
+    if (roleData) {
+        roleName.value = roleData.name;
+        rolePermissions.value = roleData.permission || [];
+    }
+});
+</script>

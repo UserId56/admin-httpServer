@@ -24,7 +24,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { UserAPI, RoleAPI } from 'src/API';
 import type { Users } from 'src/models/users';
@@ -33,16 +33,15 @@ import type { Role } from 'src/models/roles';
 const router = useRouter();
 const route = useRoute();
 
+const userId = ref<number | null>(null);
+
 let oldUser = {} as Users;
 
-const user = ref<Users>({
+const user = ref<Partial<Users>>({
     id: 0,
     username: '',
     email: '',
-    role: '',
     password: '',
-    created_at: '',
-    updated_at: '',
     role_id: 23,
 });
 
@@ -53,8 +52,8 @@ onMounted(async () => {
         roles.value = rolesData;
     }
     if (route.name === 'users-item-edit' || route.name === 'users-item') {
-        const userId = Number(route.params.id);
-        const userData = await UserAPI.getUserById(userId);
+        userId.value = Number(route.params.id);
+        const userData = await UserAPI.getUserById(userId.value);
         if (userData) {
             user.value = userData;
             oldUser = { ...userData };
@@ -72,12 +71,13 @@ const checkEditFields = (field: string): boolean => {
 
 const onSave = async () => {
     if (route.name === 'users-item-new') {
-        await UserAPI.createUser(user.value).then(async () => {
-            await router.push({ name: 'users' });
+        await UserAPI.createUser(user.value as Users).then(async (data: any) => {
+            userId.value = data.id;
+            await router.push({ name: 'users-item', params: { id: userId.value } });
         });
     }
     if (route.name === 'users-item-edit') {
-        const payload = {};
+        const payload = {} as Partial<Users>;
         const fields: string[] = ['username', 'email', 'role_id', 'password', 'avatar', 'bio'];
         for (const field of fields) {
             if (checkEditFields(field)) {
@@ -86,9 +86,18 @@ const onSave = async () => {
             }
         }
 
-        await UserAPI.updateUser(user.value.id, payload).then(async () => {
-            await router.push({ name: 'users' });
+        await UserAPI.updateUser(user.value.id as number, payload).then(async () => {
+            await router.push({ name: 'users-item', params: { id: userId.value } });
         });
     }
 }
+
+watch(userId, async (newVal) => {
+    const userData = await UserAPI.getUserById(newVal as number);
+    if (userData) {
+        user.value = userData;
+    }
+});
+
+
 </script>

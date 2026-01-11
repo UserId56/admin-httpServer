@@ -46,7 +46,7 @@ export const updateUser = async (id: number, user: Partial<Users>): Promise<User
 
 export const createUser = async (user: Users): Promise<Users | null> => {
   try {
-    const resp = await api.post<Users>(`/user/create`, user);
+    const resp = await api.post<Users>(`/user/`, user);
     return resp.data;
   } catch (err) {
     handleApiError(err as AxiosError);
