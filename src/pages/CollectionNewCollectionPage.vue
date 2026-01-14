@@ -18,9 +18,8 @@
                                 class="col-2" />
                             <q-input v-model="field.display_name" label="Отображаемое имя" clearable maxlength="255"
                                 counter class="col-2" />
-                            <q-select v-model="field.data_type"
-                                :options="['TEXT', 'INT', 'BIGINT', 'FLOAT', 'MONEY', 'BOOLEAN', 'DATE', 'TIMESTAMP', 'JSON']"
-                                label="Тип данных" class="col-2" />
+                            <q-select v-model="field.data_type" :options="TypeOptions" label="Тип данных"
+                                class="col-2" />
                             <q-checkbox v-model="field.not_null" label="Обязательное поле" />
                             <q-input v-model="field.default_value" label="Значение по умолчанию" clearable
                                 class="col-2" />
@@ -50,6 +49,18 @@ const router = useRouter();
 const route = useRoute();
 const schemeStore = useSchemeStore();
 
+const TypeOptions = ref([
+    'TEXT',
+    'INT',
+    'BIGINT',
+    'FLOAT',
+    'MONEY',
+    'BOOLEAN',
+    'DATE',
+    'TIMESTAMP',
+    'JSON',
+]);
+
 const collection = ref<Partial<Scheme>>({
     id: 0,
     CreatedAt: '',
@@ -63,6 +74,14 @@ onMounted(async () => {
     if (route.name === 'collection-edit-collection' && route.params.name) {
         const existingScheme = await SchemeAPI.getSchemeByName(route.params.name as string);
         collection.value = { ...existingScheme };
+    }
+    const listSchemes = schemeStore.getList;
+    if (listSchemes) {
+        const refArray: string[] = [];
+        for (const scheme of listSchemes) {
+            refArray.push('ref ' + scheme.name);
+        }
+        TypeOptions.value = TypeOptions.value.concat(refArray);
     }
     Loading.hide();
 });
@@ -88,6 +107,13 @@ const addColumn = () => {
 
 const create = async () => {
     Loading.show();
+    for (const column of collection.value.columns || []) {
+        if (column.data_type.includes('ref')) {
+            const parts = column.data_type.split(' ');
+            column.data_type = parts[0] as string;
+            column.referenced_scheme = parts[1] as string;
+        }
+    }
     try {
         if (route.name === 'collection-edit-collection') {
             await SchemeAPI.updateScheme(collection.value);

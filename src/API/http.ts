@@ -4,6 +4,7 @@ import { LocalStorage, Notify } from 'quasar';
 import type { APIError } from './models/error';
 import { useUserStore } from 'src/stores/user-store';
 import { RoleAPI } from '.';
+import { getAppRouter } from 'src/router';
 
 export const setAuthToken = (token: string | null) => {
   if (token) {
@@ -47,10 +48,14 @@ export const setPermission = (permission: Array<string> | null) => {
 };
 
 // Простейший обработчик ошибок (можно расширить)
-export const handleApiError = (err: AxiosError) => {
+export const handleApiError = async (err: AxiosError) => {
   if (err.response?.status === 401) {
     const userStore = useUserStore();
     userStore.setNotAuth();
+    const router = getAppRouter();
+    if (!router) return;
+    await router.push({ name: 'login' });
+    return;
   }
   Notify.create({
     type: 'negative',

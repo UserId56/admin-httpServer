@@ -8,7 +8,7 @@ export const getObject = async (nameCollection: string, reqData: ReqData): Promi
     const resp = await api.post<Array<any>>('/object/' + nameCollection + '/query', reqData);
     return resp;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return null;
   }
 };
@@ -19,7 +19,7 @@ export const getObjectById = async (nameCollection: string, id: number): Promise
     const data = resp.data;
     return data;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return null;
   }
 };
@@ -30,7 +30,7 @@ export const createObject = async (nameCollection: string, object: any): Promise
     const data = resp.data;
     return data;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return null;
   }
 };
@@ -44,7 +44,7 @@ export const updateObject = async (
     const data = resp.data;
     return data;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return null;
   }
 };
@@ -53,7 +53,7 @@ export const deleteObject = async (nameCollection: string, id: number): Promise<
     await api.delete('/object/' + nameCollection + '/' + id);
     return true;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return false;
   }
 };
@@ -66,7 +66,7 @@ export const recoverObject = async (nameCollection: string, id: number): Promise
     await api.put('/object/' + nameCollection + '/' + id, object);
     return true;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return false;
   }
 };

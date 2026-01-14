@@ -18,6 +18,8 @@ import { loadStoredToken } from 'src/API/http';
  * with the Router instance.
  */
 
+let appRouter: ReturnType<typeof createRouter> | null = null;
+
 export default defineRouter(function (/* { store, ssrContext } */) {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
@@ -87,5 +89,10 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     document.title = to.meta.title ? (to.meta.title as string) : 'Admin Panel';
   });
 
+  appRouter = Router;
   return Router;
 });
+
+export function getAppRouter() {
+  return appRouter;
+}
