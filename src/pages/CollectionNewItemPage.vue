@@ -7,17 +7,39 @@
                     <!-- Форма для создания нового элемента -->
                     <div v-for="(column, index) in columns" :key="index" class="q-mb-md">
                         <q-input v-if="column.data_type === 'TEXT'" v-model="newItem[column.column_name]"
-                            :label="column.display_name" clearable />
+                            :label="column.display_name" :clearable="route.name !== 'collection-item'"
+                            :readonly="route.name === 'collection-item'" />
                         <q-input
                             v-else-if="column.data_type === 'INT' || column.data_type === 'BIGINT' || column.data_type === 'FLOAT' || column.data_type === 'MONEY'"
                             v-model.number="newItem[column.column_name]" :label="column.display_name" type="number"
-                            clearable />
+                            :clearable="route.name !== 'collection-item'"
+                            :readonly="route.name === 'collection-item'" />
                         <q-checkbox v-else-if="column.data_type === 'BOOLEAN'" v-model="newItem[column.column_name]"
-                            :label="column.display_name" />
+                            :label="column.display_name" :clearable="route.name !== 'collection-item'"
+                            :readonly="route.name === 'collection-item'" />
                         <q-input class="max-width-200" v-else-if="column.data_type === 'TIMESTAMP'"
-                            v-model="newItem[column.column_name]" type="datetime-local" />
+                            v-model="newItem[column.column_name]" type="datetime-local"
+                            :clearable="route.name !== 'collection-item'"
+                            :readonly="route.name === 'collection-item'" />
                         <q-input class="max-width-200" v-else-if="column.data_type === 'DATE'"
-                            v-model="newItem[column.column_name]" type="date" />
+                            v-model="newItem[column.column_name]" type="date"
+                            :clearable="route.name !== 'collection-item'"
+                            :readonly="route.name === 'collection-item'" />
+                        <q-select v-else-if="column.data_type === 'ref'" v-model="newItem[column.column_name]"
+                            :use-input="(newItem[column.column_name]) ? false : true" input-debounce="500" emit-value
+                            map-options :label="column.display_name"
+                            :hide-dropdown-icon="(route.name !== 'collection-item') && (options[column.referenced_scheme] && options[column.referenced_scheme]?.length || 0 > 0) ? false : true"
+                            :clearable="route.name !== 'collection-item'"
+                            :options="options[column.referenced_scheme] ?? []" @filter="filterFn"
+                            :data-referenced_scheme="column.referenced_scheme">
+                            <template v-slot:no-option>
+                                <q-item>
+                                    <q-item-section class="text-grey">
+                                        Не найдено соответствий
+                                    </q-item-section>
+                                </q-item>
+                            </template>
+                        </q-select>
                     </div>
                 </q-card-section>
                 <q-card-actions>
@@ -26,9 +48,8 @@
                         v-if="route.name === 'collection-new-item' || route.name === 'collection-item-edit'" />
                     <q-btn color="secondary" label="Закрыть"
                         @click="router.push({ name: 'collection', params: { name: collectionName } })"></q-btn>
-                    <q-btn
-                        v-if="route.name === 'collection-new-item' || route.name === 'collection-item-edit' && newItem.deleted_at"
-                        label="Восстановить" color="deep-orange-9" @click="createNewItem(true)"></q-btn>
+                    <q-btn v-if="route.name === 'collection-item-edit' && newItem.deleted_at" label="Восстановить"
+                        color="deep-orange-9" @click="createNewItem(true)"></q-btn>
                 </q-card-actions>
             </q-card>
         </q-form>
@@ -46,7 +67,55 @@ const collectionName = route.params.name as string;
 const schemeData = ref<any>({});
 const columns = ref<Array<any>>([]);
 const id = ref<number | null>(null);
+import type { QSelect } from 'quasar';
 const newItem = ref<{ [key: string]: any }>({});
+const options = ref<{ [key: string]: Array<{ label: string; value: any }> }>({});
+
+const filterFn = async (
+    inputValue: string,
+    doneFn: any,
+    abortFn: any
+) => {
+    // пример: если строка слишком короткая — отменяем поиск
+    if (inputValue.length < 3) {
+        abortFn();
+        return;
+    }
+
+    // callbackFn будет вызван (по контракту) библиотекой/компонентом
+    const callbackFn = () => {
+        // console.log('doneFn.callbackFn: вызвано'); 
+        // Здесь можно поместить логику обновления опций, если библиотека ожидает, что вы выполните это внутри callback
+        // Например: options.value[someScheme] = [...]; но в этой функции — только логирование.
+    };
+
+    // afterFn получит ссылку на QSelect (если библиотека её передаёт)
+    const afterFn = async (selRef: QSelect | null | undefined) => {
+        if (!selRef) {
+            return;
+        }
+        const listOptions: Array<{ label: string; value: any }> = [];
+        console.log(selRef);
+        console.log(selRef.$attrs['data-referenced_scheme']);
+        const result = await ObjectAPI.getObject(selRef.$attrs['data-referenced_scheme'] as string, {
+            include: ['id', 'username'],
+            where: [
+                {
+                    query: inputValue
+                }
+            ]
+        });
+        if (result) {
+            for (const item of result.data) {
+                listOptions.push({ label: item.username, value: item.id });
+            }
+        }
+        options.value[selRef.$attrs['data-referenced_scheme'] as string] = listOptions;
+    };
+
+    console.log('onFilter: вызываю doneFn с callbackFn и afterFn');
+    await doneFn(callbackFn, afterFn);
+};
 
 onMounted(async () => {
     console.log('Mounted CollectionNewItemPage.vue');
@@ -59,6 +128,24 @@ onMounted(async () => {
     }
     if ((route.name === 'collection-item-edit' || route.name === 'collection-item') && route.params.id) {
         const existingItem = await ObjectAPI.getObjectById(collectionName, Number(route.params.id));
+        const refCollection = [];
+        for (const column of schemeData.value.columns) {
+            if (column.data_type === 'ref') {
+                refCollection.push(column.referenced_scheme);
+            }
+        }
+        for (const ref of refCollection) {
+            const listOptions: Array<{ label: string; value: any }> = [];
+            const result = await ObjectAPI.getObject(ref, {
+                include: ['id', 'username'],
+            });
+            if (result) {
+                for (const item of result.data) {
+                    listOptions.push({ label: item.username, value: item.id });
+                }
+            }
+            options.value[ref] = listOptions;
+        }
         newItem.value = { ...existingItem };
     }
 });
