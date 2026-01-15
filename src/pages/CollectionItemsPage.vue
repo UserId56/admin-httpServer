@@ -8,14 +8,17 @@
 <script lang="ts" setup>
 import TableElement from 'components/TableElements.vue';
 import type { Column } from 'components/TableElements.vue';
-import { ObjectAPI, SchemeAPI } from '../API';
+import { ObjectAPI, SchemeAPI, UserAPI } from '../API';
 import { useRoute, useRouter } from 'vue-router';
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import type { Scheme, Column as SchemeColumn } from 'src/models/scheme';
 import type { ReqData } from 'src/models/query';
 import { Dialog, LocalStorage } from 'quasar';
 import { useUserStore } from 'src/stores/user-store';
+import { useSchemeStore } from 'src/stores/scheme-store';
+import { ShortViewPars } from 'src/helpers/ShortViewPars';
 const userStore = useUserStore();
+const schemeStore = useSchemeStore();
 
 const route = useRoute();
 const router = useRouter();
@@ -37,6 +40,10 @@ const include: string[] = [];
 
 const permission = userStore.permission;
 
+const refCollectionData = {};
+const fetchCollectionData = {};
+const rowRef: string[] = [];
+
 const getPageData = async () => {
     if (!pagination.value) return;
     // Загружаем данные объектов из этой коллекции
@@ -54,10 +61,61 @@ const getPageData = async () => {
     }
     const objectsData = await ObjectAPI.getObject(collectionName, reqData);
     if (objectsData) {
-        row.value = objectsData.data;
-        if (!row.value) {
+        if (!objectsData.data) {
             row.value = [];
         }
+        for (const r of objectsData.data) {
+            for (const col of schemeData.value.columns || []) {
+                if (col.data_type === 'ref' && r[col.column_name]) {
+                    rowRef.push(col.column_name);
+                    // @ts-expect-error SUKA
+                    if (refCollectionData[col.referenced_scheme]) {
+                        if (col.is_multiple) {
+                            // @ts-expect-error SUKA
+                            refCollectionData[col.referenced_scheme].push(...r[col.column_name]);
+                        }
+                        // @ts-expect-error SUKA
+                        refCollectionData[col.referenced_scheme].push(r[col.column_name]);
+                    } else {
+                        if (col.is_multiple) {
+                            // @ts-expect-error SUKA
+                            refCollectionData[col.referenced_scheme] = [...r[col.column_name]];
+                        } else {
+                            // @ts-expect-error SUKA
+                            refCollectionData[col.referenced_scheme] = [r[col.column_name]];
+                        }
+                    }
+                }
+            }
+        }
+        for (const key of Object.keys(refCollectionData)) {
+            const value = refCollectionData[key as keyof typeof refCollectionData];
+            let data = {};
+            if (key === 'users') {
+                // @ts-expect-error SUKA
+                data = await UserAPI.getUsers({
+                    where: [{
+                        field: 'id',
+                        operator: 'in',
+                        value: value
+                    }],
+                })
+            } else {
+                data = await ObjectAPI.getObject(key, {
+                    where: [{
+                        field: 'id',
+                        operator: 'in',
+                        value: value
+                    }],
+                });
+            }
+            // @ts-expect-error SUKA
+            if (data && data.data) {
+                // @ts-expect-error SUKA
+                fetchCollectionData[key] = data.data;
+            }
+        }
+        row.value = objectsData.data;
         pagination.value.rowsNumber = objectsData.headers?.['x-total-count'] ? parseInt(objectsData.headers['x-total-count']) : 0;
     }
 
@@ -65,7 +123,12 @@ const getPageData = async () => {
 
 const selected = ref<Array<any>>([]);
 
+const schemeList = computed(() => schemeStore.getList || []);
+
 onMounted(async () => {
+    if (schemeList.value.length === 0) {
+        await schemeStore.getSchemes();
+    }
     const data = await SchemeAPI.getSchemeByName(collectionName);
     if (data) {
         schemeData.value = data;
@@ -76,17 +139,33 @@ onMounted(async () => {
                     return;
                 }
                 include.push(field.column_name);
+                let name = field.column_name;
+                if (field.data_type === 'ref') {
+                    name = 'ref';
+                }
                 columns.value.push({
-                    name: field.column_name,
+                    name: name,
                     label: field.display_name,
                     field: field.column_name,
                     sortable: true,
                     align: 'left',
-                    format: (val: any) => {
+                    format: (val: any, row: any) => {
                         if (field.data_type === 'TIMESTAMP') {
                             if (!val) return val;
                             const date = new Date(val);
                             return date.toLocaleString();
+                        }
+                        if (rowRef.includes(field.column_name)) {
+                            let shortView = '';
+                            for (const scheme of schemeList.value) {
+                                if (scheme.name === field.referenced_scheme) {
+                                    shortView = scheme.view_data.short_view || '{id}';
+                                    break;
+                                }
+                            }
+                            const result = ShortViewPars(shortView, field.column_name, row, field.is_multiple, fetchCollectionData[field.referenced_scheme as keyof typeof fetchCollectionData], field.referenced_scheme as string);
+                            return result;
+
                         }
                         return val;
                     }

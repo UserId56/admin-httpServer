@@ -14,15 +14,16 @@
                         <q-btn icon="close" flat @click="removeColumn(index)"
                             class="absolute-top-right z-index-99"></q-btn>
                         <q-card-section class="row justify-between">
-                            <q-input v-model="field.column_name" label="Имя поля" clearable maxlength="64" counter
-                                class="col-2" />
-                            <q-input v-model="field.display_name" label="Отображаемое имя" clearable maxlength="255"
-                                counter class="col-2" />
+                            <q-input v-model="field.column_name" label="Имя поля" maxlength="64" counter
+                                class="w-100" />
+                            <q-input v-model="field.display_name" label="Название" maxlength="255" counter
+                                class="w-100" />
                             <q-select v-model="field.data_type" :options="TypeOptions" label="Тип данных"
-                                class="col-2" />
+                                class="w-100" />
+                            <q-checkbox v-model="field.is_multiple" label="Множественное значение"
+                                :disable="!field.data_type.includes('ref ')" />
                             <q-checkbox v-model="field.not_null" label="Обязательное поле" />
-                            <q-input v-model="field.default_value" label="Значение по умолчанию" clearable
-                                class="col-2" />
+                            <q-input v-model="field.default_value" label="Значение по умолчанию" class="w-100" />
                         </q-card-section>
                     </q-card>
                 </div>
@@ -51,6 +52,7 @@ const schemeStore = useSchemeStore();
 
 const TypeOptions = ref([
     'TEXT',
+    'STRING',
     'INT',
     'BIGINT',
     'FLOAT',
@@ -99,6 +101,8 @@ const addColumn = () => {
         column_name: 'new_column_' + (collection.value.columns.length + 1),
         display_name: 'New Column ' + (collection.value.columns.length + 1),
         data_type: 'TEXT',
+        is_multiple: false,
+        is_unique: false,
         not_null: false,
         default_value: null,
         validation_rules: null,
@@ -148,6 +152,10 @@ const removeColumn = (index: number) => {
 </script>
 
 <style scoped lang="scss">
+.w-100 {
+    width: 125px;
+}
+
 .z-index-99 {
     z-index: 99;
 }

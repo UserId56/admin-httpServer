@@ -12,7 +12,7 @@ const getRolePermissions = async (roleId: number): Promise<Array<string> | null>
     const resp = await api.get<Role>(`/role/` + roleId);
     return resp.data.permission;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return null;
   }
 };
@@ -28,7 +28,7 @@ export const login = async (params: LoginParams): Promise<User | null> => {
     setPermission(permission);
     return data;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return null;
   }
 };
@@ -37,7 +37,7 @@ export const logout = async () => {
   try {
     await api.post('/user/logout');
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
   } finally {
     setAuthToken(null);
   }
@@ -49,7 +49,7 @@ export const getProfile = async (): Promise<UserProfile | null | AxiosError> => 
     const data = resp.data;
     return data;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return err as null;
   }
 };

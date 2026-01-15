@@ -9,7 +9,7 @@ export const getSchemes = async (take: number, skip: number): Promise<Array<Sche
     const data = resp.data;
     return data;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return [];
   }
 };
@@ -20,7 +20,7 @@ export const getSchemeByName = async (name: string): Promise<Scheme | null> => {
     const data = resp.data;
     return data;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return null;
   }
 };
@@ -33,7 +33,7 @@ export const createScheme = async (scheme: Partial<Scheme>): Promise<Scheme | nu
     const data = resp.data;
     return data;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return null;
   }
 };
@@ -44,7 +44,7 @@ export const updateScheme = async (scheme: Partial<Scheme>): Promise<Scheme | nu
     const data = resp.data;
     return data;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return null;
   }
 };
@@ -53,7 +53,7 @@ export const deleteScheme = async (name: string): Promise<boolean> => {
     await api.delete(`/scheme/` + name);
     return true;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return false;
   }
 };
