@@ -6,7 +6,7 @@
                 <q-card-section>
                     <!-- Форма для создания нового элемента -->
                     <div v-for="(column, index) in columns" :key="index" class="q-mb-md">
-                        <q-input v-if="column.data_type === 'TEXT'" v-model="newItem[column.column_name]"
+                        <q-input v-if="column.data_type === 'STRING'" v-model="newItem[column.column_name]"
                             :label="column.display_name" :clearable="route.name !== 'collection-item'"
                             :readonly="route.name === 'collection-item'" />
                         <q-input
@@ -26,12 +26,20 @@
                             :clearable="route.name !== 'collection-item'"
                             :readonly="route.name === 'collection-item'" />
                         <q-select v-else-if="column.data_type === 'ref'" v-model="newItem[column.column_name]"
-                            :use-input="(newItem[column.column_name]) ? false : true" input-debounce="500" emit-value
-                            map-options :label="column.display_name"
+                            :use-input="(!newItem[column.column_name] || column.is_multiple) ? true : false"
+                            input-debounce="500" emit-value map-options :multiple="column.is_multiple" use-chips
+                            @new-value="createValue" new-value-mode="toggle" :label="column.display_name"
                             :hide-dropdown-icon="(route.name !== 'collection-item') && (options[column.referenced_scheme] && options[column.referenced_scheme]?.length || 0 > 0) ? false : true"
-                            :clearable="route.name !== 'collection-item'"
+                            :clearable="route.name !== 'collection-item'" @add="addSelect(column.referenced_scheme)"
                             :options="options[column.referenced_scheme] ?? []" @filter="filterFn"
                             :data-referenced_scheme="column.referenced_scheme">
+                            <template v-slot:selected-item="opt">
+                                <q-chip :label="opt.opt.label" :key="opt.opt.value"
+                                    :removable="route.name !== 'collection-item'" color="primary" text-color="white"
+                                    remove-aria-label="Удалить"
+                                    @remove="newItem[column.column_name] = Array.isArray(newItem[column.column_name]) ? newItem[column.column_name].filter((val: any) => val !== opt.opt.value) : null">
+                                </q-chip>
+                            </template>
                             <template v-slot:no-option>
                                 <q-item>
                                     <q-item-section class="text-grey">
@@ -71,6 +79,16 @@ import type { QSelect } from 'quasar';
 const newItem = ref<{ [key: string]: any }>({});
 const options = ref<{ [key: string]: Array<{ label: string; value: any }> }>({});
 
+const addSelect = (scheme: string) => {
+    refInput.value[scheme]?.updateInputValue('');
+};
+
+const createValue = (val: string, done: any) => {
+    done();
+};
+
+const refInput = ref<{ [key: string]: QSelect | null }>({});
+
 const filterFn = async (
     inputValue: string,
     doneFn: any,
@@ -95,8 +113,6 @@ const filterFn = async (
             return;
         }
         const listOptions: Array<{ label: string; value: any }> = [];
-        console.log(selRef);
-        console.log(selRef.$attrs['data-referenced_scheme']);
         const result = await ObjectAPI.getObject(selRef.$attrs['data-referenced_scheme'] as string, {
             include: ['id', 'username'],
             where: [
@@ -111,9 +127,8 @@ const filterFn = async (
             }
         }
         options.value[selRef.$attrs['data-referenced_scheme'] as string] = listOptions;
+        refInput.value[selRef.$attrs['data-referenced_scheme'] as string] = selRef;
     };
-
-    console.log('onFilter: вызываю doneFn с callbackFn и afterFn');
     await doneFn(callbackFn, afterFn);
 };
 
@@ -121,7 +136,7 @@ onMounted(async () => {
     console.log('Mounted CollectionNewItemPage.vue');
     schemeData.value = await SchemeAPI.getSchemeByName(collectionName);
     for (const column of schemeData.value.columns) {
-        if (column.column_name === 'id' || column.column_name === 'created_at' || column.column_name === 'updated_at' || column.column_name === 'deleted_at') {
+        if (column.column_name === 'id' || column.column_name === 'created_at' || column.column_name === 'updated_at' || column.column_name === 'deleted_at' || column.column_name === 'owner_id') {
             continue;
         }
         columns.value.push(column);
