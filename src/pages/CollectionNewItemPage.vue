@@ -67,8 +67,11 @@
 <script lang="ts" setup>
 import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { SchemeAPI, ObjectAPI } from '../API';
+import { SchemeAPI, ObjectAPI, UserAPI } from '../API';
 import { Notify, Loading } from 'quasar';
+import { useSchemeStore } from 'src/stores/scheme-store';
+import { GetIncludeFields } from 'src/helpers/ShortViewPars';
+const schemeStore = useSchemeStore();
 const route = useRoute();
 const router = useRouter();
 const collectionName = route.params.name as string;
@@ -113,14 +116,7 @@ const filterFn = async (
             return;
         }
         const listOptions: Array<{ label: string; value: any }> = [];
-        const result = await ObjectAPI.getObject(selRef.$attrs['data-referenced_scheme'] as string, {
-            include: ['id', 'username'],
-            where: [
-                {
-                    query: inputValue
-                }
-            ]
-        });
+        const result = await getData(selRef.$attrs['data-referenced_scheme'] as string);
         if (result) {
             for (const item of result.data) {
                 listOptions.push({ label: item.username, value: item.id });
@@ -131,6 +127,36 @@ const filterFn = async (
     };
     await doneFn(callbackFn, afterFn);
 };
+
+const getData = async (refColection: string, refData?: boolean): Promise<any> => {
+    if (schemeStore.getList.length === 0) {
+        await schemeStore.getSchemes();
+    }
+    let data = null;
+    const include = ['id']
+        .concat(GetIncludeFields(schemeStore.getSchemeByName(refColection)?.view_data.short_view as any));
+    const reqData = {
+        include: include,
+    }
+    if (refData) {
+        // @ts-expect-error Бесит
+        reqData.where = [
+            {
+                field: 'id',
+                operator: 'in',
+                value: refDataColumns[refColection as keyof typeof refDataColumns]
+            }
+        ]
+    }
+    if (refColection === 'users') {
+        data = await UserAPI.getUsers(reqData);
+    } else {
+        data = await ObjectAPI.getObject(refColection, reqData);
+    }
+    return data;
+}
+
+const refDataColumns = {};
 
 onMounted(async () => {
     console.log('Mounted CollectionNewItemPage.vue');
@@ -143,23 +169,40 @@ onMounted(async () => {
     }
     if ((route.name === 'collection-item-edit' || route.name === 'collection-item') && route.params.id) {
         const existingItem = await ObjectAPI.getObjectById(collectionName, Number(route.params.id));
-        const refCollection = [];
         for (const column of schemeData.value.columns) {
             if (column.data_type === 'ref') {
-                refCollection.push(column.referenced_scheme);
+                if (existingItem[column.column_name] === null || existingItem[column.column_name] === undefined || existingItem[column.column_name].length === 0) {
+                    continue;
+                }
+                // @ts-expect-error Бесит
+                if (refDataColumns[column.referenced_scheme as keyof typeof refDataColumns] && refDataColumns[column.referenced_scheme as keyof typeof refDataColumns].length > 0) {
+                    if (column.is_multiple) {
+                        // @ts-expect-error Бесит
+                        refDataColumns[column.referenced_scheme as keyof typeof refDataColumns].push(...existingItem[column.column_name]);
+                    } else {
+                        // @ts-expect-error Бесит
+                        refDataColumns[column.referenced_scheme as keyof typeof refDataColumns].push(existingItem[column.column_name]);
+                    }
+                } else {
+                    if (column.is_multiple) {
+                        // @ts-expect-error Бесит
+                        refDataColumns[column.referenced_scheme as keyof typeof refDataColumns] = [...existingItem[column.column_name]];
+                    } else {
+                        // @ts-expect-error Бесит
+                        refDataColumns[column.referenced_scheme as keyof typeof refDataColumns] = [existingItem[column.column_name]];
+                    }
+                }
             }
         }
-        for (const ref of refCollection) {
-            const listOptions: Array<{ label: string; value: any }> = [];
-            const result = await ObjectAPI.getObject(ref, {
-                include: ['id', 'username'],
-            });
+        const listOptions: Array<{ label: string; value: any }> = [];
+        for (const key of Object.keys(refDataColumns)) {
+            const result = await getData(key, true);
             if (result) {
                 for (const item of result.data) {
                     listOptions.push({ label: item.username, value: item.id });
                 }
             }
-            options.value[ref] = listOptions;
+            options.value[key] = listOptions;
         }
         newItem.value = { ...existingItem };
     }
@@ -201,11 +244,6 @@ const createNewItem = async (recover: boolean = false) => {
             }
             delete newItem.value.created_at
             delete newItem.value.updated_at
-            // for (const key in newItem.value) {
-            //     if (newItem.value[key] === null || newItem.value[key] === undefined || newItem.value[key] === '') {
-            //         delete newItem.value[key];
-            //     }
-            // }
             result = await ObjectAPI.updateObject(collectionName, Number(route.params.id), newItem.value);
         }
         if (result.id) {

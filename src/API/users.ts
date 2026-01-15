@@ -9,7 +9,7 @@ export const getUsers = async (reqData: ReqData): Promise<AxiosResponse | null> 
     const resp = await api.post<AxiosResponse>('/user/query', reqData);
     return resp;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return null;
   }
 };
@@ -19,7 +19,7 @@ export const getUserById = async (id: number): Promise<Users | null> => {
     const resp = await api.get<Users>(`/user/${id}`);
     return resp.data;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return null;
   }
 };
@@ -29,7 +29,7 @@ export const deleteUser = async (id: number): Promise<boolean> => {
     const resp = await api.delete<boolean>(`/user/${id}`);
     return resp.data;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return false;
   }
 };
@@ -39,7 +39,7 @@ export const updateUser = async (id: number, user: Partial<Users>): Promise<User
     const resp = await api.put<Users>(`/user/` + id, user);
     return resp.data;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return null;
   }
 };
@@ -49,7 +49,7 @@ export const createUser = async (user: Users): Promise<Users | null> => {
     const resp = await api.post<Users>(`/user/`, user);
     return resp.data;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return null;
   }
 };

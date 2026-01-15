@@ -12,7 +12,7 @@ export const getRoles = async (
     const data = resp.data;
     return data;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return [];
   }
 };
@@ -23,7 +23,7 @@ export const getRoleById = async (id: number): Promise<Role | null> => {
     const data = resp.data;
     return data;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return null;
   }
 };
@@ -35,7 +35,7 @@ export const createRole = async (role: Partial<Role>): Promise<Role | null> => {
     const data = resp.data;
     return data;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return null;
   }
 };
@@ -48,7 +48,7 @@ export const updateRole = async (role: Partial<Role>): Promise<Role | null> => {
     const data = resp.data;
     return data;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return null;
   }
 };
@@ -57,7 +57,7 @@ export const deleteRole = async (id: number): Promise<boolean> => {
     await api.delete(`/role/` + id);
     return true;
   } catch (err) {
-    handleApiError(err as AxiosError);
+    await handleApiError(err as AxiosError);
     return false;
   }
 };

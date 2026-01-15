@@ -17,7 +17,13 @@
                         @click="recoverElement" />
                 </q-btn-group>
             </div>
-        </template></q-table>
+        </template>
+        <template #body-cell-ref="{ value, key }">
+            <q-td :key="key" @click.stop>
+                <RefChipComponent :value="value" />
+            </q-td>
+        </template>
+    </q-table>
 </template>
 
 <script lang="ts" setup>
@@ -25,6 +31,7 @@ import { ref, watch, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 const router = useRouter();
 const route = useRoute();
+import RefChipComponent from 'components/RefChipComponent.vue';
 
 // Тип строки — допускаем произвольные поля
 type Row = {
