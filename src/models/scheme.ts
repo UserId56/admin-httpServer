@@ -8,6 +8,7 @@ export interface Column {
   display_name: string;
   data_type: string;
   referenced_scheme: string | null;
+  is_multiple?: boolean;
   is_unique?: boolean;
   not_null?: boolean;
   default_value?: string | null;
