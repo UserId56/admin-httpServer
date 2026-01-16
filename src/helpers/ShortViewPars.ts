@@ -9,20 +9,21 @@ export function ShortViewPars(
   const re = /\{([a-zA-Z0-9_]+)\}/g;
   const result = [];
   if (!isMultiple) {
-    const strData = shortView;
+    let strData = shortView;
     const names = Array.from(shortView.matchAll(re), (m) => m[1]);
     const value = row[refName];
     names.forEach((name) => {
       for (const itemData of dataRefScheme) {
         if (itemData.id === value) {
           const value = itemData[name as keyof typeof itemData];
-          result.push({
-            title: strData.replace(`{${name}}`, value ? String(value) : ''),
-            scheme: refScheme,
-            id: row[refName],
-          });
+          strData = strData.replace(`{${name}}`, value ? String(value) : '');
         }
       }
+    });
+    result.push({
+      title: strData,
+      scheme: refScheme,
+      id: row[refName],
     });
   } else {
     const arr = row[refName];
@@ -50,5 +51,16 @@ export function ShortViewPars(
 export function GetIncludeFields(shortView: string): Array<string> {
   const re = /\{([a-zA-Z0-9_]+)\}/g;
   const names = Array.from(shortView.matchAll(re), (m) => m[1]);
-  return names as Array<string>;
+  return names.filter((name) => name !== 'id') as Array<string>;
+}
+
+export function GetNameAsShortView(shortView: string, data: any): string {
+  const re = /\{([a-zA-Z0-9_]+)\}/g;
+  let strData = shortView;
+  const names = Array.from(shortView.matchAll(re), (m) => m[1]);
+  names.forEach((name) => {
+    const value = data[name as keyof typeof data];
+    strData = strData.replace(`{${name}}`, value ? String(value) : '');
+  });
+  return strData;
 }

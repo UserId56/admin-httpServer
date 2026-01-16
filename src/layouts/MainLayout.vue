@@ -14,7 +14,7 @@
       @mouseleave="miniState = true">
       <q-list>
 
-        <LeftMenuItemComponent v-for="link in linksList" :key="link.title" v-bind="link" />
+        <LeftMenuItemComponent v-for="link in linksList" :key="link.title" v-bind="link" @go-link="miniState = true" />
       </q-list>
     </q-drawer>
 
@@ -52,7 +52,7 @@ const linksList: Array<LeftMenuItem> = [
 ]
 
 const leftDrawerOpen = ref(true);
-const miniState = ref(false)
+const miniState = ref(true)
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value;

@@ -70,7 +70,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { SchemeAPI, ObjectAPI, UserAPI } from '../API';
 import { Notify, Loading } from 'quasar';
 import { useSchemeStore } from 'src/stores/scheme-store';
-import { GetIncludeFields } from 'src/helpers/ShortViewPars';
+import { GetIncludeFields, GetNameAsShortView } from 'src/helpers/ShortViewPars';
 const schemeStore = useSchemeStore();
 const route = useRoute();
 const router = useRouter();
@@ -116,10 +116,10 @@ const filterFn = async (
             return;
         }
         const listOptions: Array<{ label: string; value: any }> = [];
-        const result = await getData(selRef.$attrs['data-referenced_scheme'] as string);
+        const result = await getData(selRef.$attrs['data-referenced_scheme'] as string, false, inputValue);
         if (result) {
             for (const item of result.data) {
-                listOptions.push({ label: item.username, value: item.id });
+                listOptions.push({ label: GetNameAsShortView(schemeStore.getSchemeByName(selRef.$attrs['data-referenced_scheme'] as string)?.view_data.short_view as string, item), value: item.id });
             }
         }
         options.value[selRef.$attrs['data-referenced_scheme'] as string] = listOptions;
@@ -128,7 +128,7 @@ const filterFn = async (
     await doneFn(callbackFn, afterFn);
 };
 
-const getData = async (refColection: string, refData?: boolean): Promise<any> => {
+const getData = async (refColection: string, refData?: boolean, search?: string): Promise<any> => {
     if (schemeStore.getList.length === 0) {
         await schemeStore.getSchemes();
     }
@@ -145,6 +145,14 @@ const getData = async (refColection: string, refData?: boolean): Promise<any> =>
                 field: 'id',
                 operator: 'in',
                 value: refDataColumns[refColection as keyof typeof refDataColumns]
+            }
+        ]
+    }
+    if (search) {
+        // @ts-expect-error Бесит
+        reqData.where = [
+            {
+                query: search
             }
         ]
     }
@@ -199,7 +207,7 @@ onMounted(async () => {
             const result = await getData(key, true);
             if (result) {
                 for (const item of result.data) {
-                    listOptions.push({ label: item.username, value: item.id });
+                    listOptions.push({ label: GetNameAsShortView(schemeStore.getSchemeByName(key)?.view_data.short_view as string, item), value: item.id });
                 }
             }
             options.value[key] = listOptions;

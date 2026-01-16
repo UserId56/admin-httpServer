@@ -1,5 +1,5 @@
 <template>
-  <q-item clickable :to="link">
+  <q-item clickable :to="link" @click="handlerClickLink">
     <q-item-section v-if="icon" avatar>
       <q-icon :name="icon" />
     </q-item-section>
@@ -11,6 +11,7 @@
 </template>
 
 <script setup lang="ts">
+
 export interface LeftMenuItem {
   title: string;
   link?: string;
@@ -21,4 +22,12 @@ withDefaults(defineProps<LeftMenuItem>(), {
   link: '#',
   icon: '',
 });
+
+const emit = defineEmits<{
+  (e: 'goLink'): void;
+}>();
+
+const handlerClickLink = () => {
+  emit('goLink');
+};
 </script>
