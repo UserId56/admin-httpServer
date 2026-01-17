@@ -1,7 +1,8 @@
 <template>
     <q-page class="q-pa-md column">
         <TableElement :columns="columns" :rows="row" :title="schemeData.display_name" v-model:pagination="pagination"
-            @delete-rows="handleDeleteRows" v-model:selected="selected" />
+            @delete-rows="handleDeleteRows" v-model:selected="selected" @recover-rows="handleRecoverRows"
+            :IsHierarchy="IsHierarchy" :TypeView="TypeView" @type-view="EditView" @getChildren="handlerGetChildren" />
     </q-page>
 </template>
 
@@ -40,18 +41,170 @@ const include: string[] = [];
 
 const permission = userStore.permission;
 
-const refCollectionData = {};
+let refCollectionData = {};
 const fetchCollectionData = {};
 const rowRef: string[] = [];
 
+const IsHierarchy = ref(false);
+const refPearent = ref('')
+
+const TypeView = ref<'all' | 'hierarchy'>('all');
+
+const EditView = (type: 'all' | 'hierarchy') => {
+    TypeView.value = type;
+}
+
+const getViewType = (): boolean => {
+    const SchemeTypeView = LocalStorage.getItem('SchemeTypeView');
+    if (SchemeTypeView) {
+        if (TypeView.value != SchemeTypeView[route.params.name as keyof typeof SchemeTypeView]) {
+            TypeView.value = SchemeTypeView[route.params.name as keyof typeof SchemeTypeView];
+            return true;
+        }
+    }
+    return false;
+};
+
+watch(TypeView, async (newValue, oldValue) => {
+    if (newValue !== oldValue) {
+        const viewTypeStorage = LocalStorage.getItem('SchemeTypeView') || {};
+        // @ts-expect-error ignore
+        viewTypeStorage[route.params.name as keyof typeof viewTypeStorage] = newValue;
+        LocalStorage.set('SchemeTypeView', viewTypeStorage);
+        refCollectionData = {};
+        pagination.value.page = 1;
+        await getPageData();
+    }
+});
+
+const getIndexArray = (rowData: any, arrayData: any[]): any => {
+    let result: any = {};
+    for (let i = 0; i < arrayData.length; i++) {
+        if (arrayData[i].id === rowData.id) {
+            result = arrayData[i];
+            break
+        } else {
+            if (arrayData[i].children && arrayData[i].children.length > 0) {
+                const res = getIndexArray(rowData, arrayData[i].children);
+                if (res.id) {
+                    result = res
+                    break;
+                }
+            }
+        }
+    }
+    return result;
+};
+
+const getSTyle = (): string => {
+    const ArraColor = ['orange', 'yellow', 'green', 'blue', 'indigo', 'purple', 'pink', 'brown'];
+    const color = ArraColor[Math.floor(Math.random() * ArraColor.length)];
+    return 'bg-' + color + '-2';
+};
+
+const handlerGetChildren = async (rowSearch: any) => {
+    const dataRow = getIndexArray(rowSearch, row.value);
+    dataRow.open = !dataRow.open;
+    if (!dataRow.open) {
+        dataRow.children = null;
+        return;
+    }
+    dataRow.style = getSTyle();
+    if (!refPearent.value) {
+        return;
+    }
+    const parentId = dataRow['id'];
+    const reqData: ReqData = {
+        take: pagination.value.rowsPerPage,
+        skip: 0,
+        count: true,
+        include: include,
+        where: [{
+            field: refPearent.value,
+            operator: 'eq',
+            value: parentId
+        }]
+    };
+    const objectsData = await ObjectAPI.getObject(collectionName, reqData);
+    if (objectsData) {
+        for (const r of objectsData.data) {
+            for (const col of schemeData.value.columns || []) {
+                if (col.data_type === 'ref') {
+                    if (!rowRef.includes(col.column_name)) {
+                        rowRef.push(col.column_name);
+                    }
+                    if (!r[col.column_name]) {
+                        continue;
+                    }
+                    // @ts-expect-error SUKA
+                    if (refCollectionData[col.referenced_scheme]) {
+                        if (col.is_multiple) {
+                            // @ts-expect-error SUKA
+                            refCollectionData[col.referenced_scheme].push(...r[col.column_name]);
+                        }
+                        // @ts-expect-error SUKA
+                        refCollectionData[col.referenced_scheme].push(r[col.column_name]);
+                    } else {
+                        if (col.is_multiple) {
+                            // @ts-expect-error SUKA
+                            refCollectionData[col.referenced_scheme] = [...r[col.column_name]];
+                        } else {
+                            // @ts-expect-error SUKA
+                            refCollectionData[col.referenced_scheme] = [r[col.column_name]];
+                        }
+                    }
+                }
+            }
+        }
+        for (const key of Object.keys(refCollectionData)) {
+            const value = refCollectionData[key as keyof typeof refCollectionData];
+            let data = {};
+            if (key === 'users') {
+                // @ts-expect-error SUKA
+                data = await UserAPI.getUsers({
+                    where: [{
+                        field: 'id',
+                        operator: 'in',
+                        value: value
+                    }],
+                })
+            } else {
+                data = await ObjectAPI.getObject(key, {
+                    where: [{
+                        field: 'id',
+                        operator: 'in',
+                        value: value
+                    }],
+                });
+            }
+            // @ts-expect-error SUKA
+            if (data && data.data) {
+                // @ts-expect-error SUKA
+                fetchCollectionData[key] = data.data;
+            }
+        }
+        dataRow.children = objectsData.data;
+    }
+};
+
 const getPageData = async () => {
     if (!pagination.value) return;
+    if (getViewType()) {
+        return
+    }
     // Загружаем данные объектов из этой коллекции
     const reqData: ReqData = {
         take: pagination.value.rowsPerPage,
         skip: (pagination.value.page - 1) * pagination.value.rowsPerPage,
         count: true,
         include: include,
+    }
+    if (TypeView.value === 'hierarchy' && refPearent.value) {
+        reqData.where = [{
+            field: refPearent.value,
+            operator: 'null',
+            value: null
+        }];
     }
     if (pagination.value.sortBy) {
         reqData.order = [{
@@ -66,8 +219,19 @@ const getPageData = async () => {
         }
         for (const r of objectsData.data) {
             for (const col of schemeData.value.columns || []) {
-                if (col.data_type === 'ref' && r[col.column_name]) {
-                    rowRef.push(col.column_name);
+                if (col.data_type === 'ref') {
+                    if (!rowRef.includes(col.column_name)) {
+                        rowRef.push(col.column_name);
+                    }
+                    if (!col.is_multiple) {
+                        if (route.params.name !== 'users' && route.params.name === col.referenced_scheme) {
+                            refPearent.value = col.column_name;
+                            IsHierarchy.value = true;
+                        }
+                    }
+                    if (!r[col.column_name]) {
+                        continue;
+                    }
                     // @ts-expect-error SUKA
                     if (refCollectionData[col.referenced_scheme]) {
                         if (col.is_multiple) {
@@ -141,7 +305,14 @@ onMounted(async () => {
                 include.push(field.column_name);
                 let name = field.column_name;
                 if (field.data_type === 'ref') {
-                    name = 'ref';
+                    name = 'ref' + field.referenced_scheme;
+                    if (route.params.name !== 'users' && route.params.name === field.referenced_scheme) {
+                        refPearent.value = field.column_name;
+                        IsHierarchy.value = true;
+                    }
+                }
+                if (field.data_type === 'BOOLEAN') {
+                    name = 'BOOLEAN' + field.column_name;
                 }
                 columns.value.push({
                     name: name,
@@ -227,6 +398,28 @@ const handleDeleteRows = async () => {
     }
 }
 
+const handleRecoverRows = async () => {
+    try {
+        for (const r of selected.value) {
+            const id = r.id ?? r.ID ?? r._id;
+            if (!id) {
+                console.warn('Нет идентификатора у строки, пропускаю', r);
+                continue;
+            }
+            console.log('recover request for id', id);
+            if (route.params.name === 'users') {
+                await UserAPI.recoverUser(id);
+            } else {
+                await ObjectAPI.recoverObject(collectionName, id);
+            }
+        }
+        selected.value = [];
+        await getPageData();
+    } catch (err) {
+        console.error('handleRecoverRows error', err);
+    }
+}
+
 watch(pagination, async (newValue, oldValue) => {
     if (newValue.page !== oldValue.page) {
         const target = {
@@ -244,6 +437,7 @@ watch(pagination, async (newValue, oldValue) => {
 
     if (newValue.page !== oldValue.page || newValue.rowsPerPage !== oldValue.rowsPerPage ||
         newValue.sortBy !== oldValue.sortBy || newValue.descending !== oldValue.descending) {
+        refCollectionData = {};
         const savePagination = { ...pagination.value };
         savePagination.page = 1;
         LocalStorage.setItem(`${collectionName}-pagination`, savePagination);
