@@ -7,11 +7,14 @@ export function ShortViewPars(
   refScheme: string,
 ): any[] {
   const re = /\{([a-zA-Z0-9_]+)\}/g;
-  const result = [];
+  const result: any[] = [];
   if (!isMultiple) {
     let strData = shortView;
     const names = Array.from(shortView.matchAll(re), (m) => m[1]);
     const value = row[refName];
+    if (!value) {
+      return result;
+    }
     names.forEach((name) => {
       for (const itemData of dataRefScheme) {
         if (itemData.id === value) {
@@ -27,6 +30,9 @@ export function ShortViewPars(
     });
   } else {
     const arr = row[refName];
+    if (!arr) {
+      return result;
+    }
     for (const item of arr) {
       let itemStr = shortView;
       const names = Array.from(shortView.matchAll(re), (m) => m[1]);

@@ -53,3 +53,16 @@ export const createUser = async (user: Users): Promise<Users | null> => {
     return null;
   }
 };
+
+export const recoverUser = async (id: number): Promise<boolean> => {
+  try {
+    const object = {
+      deleted_at: null,
+    };
+    await api.put('/user/' + id, object);
+    return true;
+  } catch (err) {
+    await handleApiError(err as AxiosError);
+    return false;
+  }
+};

@@ -2,9 +2,9 @@
     <q-table class="full-width" :rows="props.rows" :columns="props.columns" :row-key="(row) => row.id ? row.id : row.ID"
         :selection="(route.name === 'collections' || route.name === 'roles') ? 'single' : 'multiple'"
         v-model:selected="selectedLocal" separator="cell" rows-per-page-label="Элементов на странице"
-        :pagination-label="setCountTitle" :rows-per-page-options="[25, 50, 100, 200, 500, 1000]" @row-click="go"
+        :pagination-label="setCountTitle" :rows-per-page-options="[25, 50, 100, 200, 500, 1000]"
         v-model:pagination="paginationProxy" @request="updatePag">
-        <template #top>
+        <template #top-left>
             <div>
                 <div class="text-h6 q-pa-sm">{{ props.title }}</div>
                 <q-btn-group>
@@ -18,10 +18,29 @@
                 </q-btn-group>
             </div>
         </template>
-        <template #body-cell-ref="{ value, key }">
-            <q-td :key="key" @click.stop>
-                <RefChipComponent :value="value" class="column" />
-            </q-td>
+        <template #top-right>
+            <div class="column">
+                <q-btn icon="search"></q-btn>
+                <q-btn-dropdown class="q-mt-sm" color="primary" :icon="TypeViewIcon" v-if="props.IsHierarchy">
+                    <q-list>
+                        <q-item clickable v-close-popup @click="TypeView = 'all'">
+                            <q-item-section>
+                                <q-item-label>Списком</q-item-label>
+                            </q-item-section>
+                        </q-item>
+
+                        <q-item clickable v-close-popup @click="TypeView = 'hierarchy'">
+                            <q-item-section>
+                                <q-item-label>Иерархией</q-item-label>
+                            </q-item-section>
+                        </q-item>
+                    </q-list>
+                </q-btn-dropdown>
+            </div>
+        </template>
+        <template #body="propsTable">
+            <TableRow :propsTable="propsTable" :IsHierarchy="props.IsHierarchy" :TypeView="TypeView"
+                :localSelected="selectedLocal" @go="go" @addSelected="addSelected" @getChildren="getChildren" />
         </template>
     </q-table>
 </template>
@@ -29,9 +48,28 @@
 <script lang="ts" setup>
 import { ref, watch, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import TableRow from './TableRow.vue';
 const router = useRouter();
 const route = useRoute();
-import RefChipComponent from 'components/RefChipComponent.vue';
+
+
+// Запрос дочернихъ элементов
+const getChildren = (row: any) => {
+    emit('getChildren', row);
+};
+
+// Тип просмотра таблицы
+const TypeView = computed<'all' | 'hierarchy'>({
+    get: () => props.TypeView ?? 'all',
+    set: (val: 'all' | 'hierarchy') => {
+        emit('typeView', val);
+    }
+});
+
+const TypeViewIcon = computed(() => {
+    return TypeView.value === 'hierarchy' ? 'menu_open' : 'menu';
+});
+
 
 // Тип строки — допускаем произвольные поля
 type Row = {
@@ -71,6 +109,8 @@ const props = defineProps<{
     columns: Column[];
     pagination: any;
     selected?: Row[]
+    IsHierarchy?: boolean;
+    TypeView?: 'all' | 'hierarchy';
 }>();
 
 const disableBtn = ref({
@@ -87,6 +127,8 @@ const emit = defineEmits<{
     (e: 'update:selected', selected: Row[]): void;
     (e: 'delete-rows'): void;
     (e: 'recover-rows'): void;
+    (e: 'typeView', type: 'all' | 'hierarchy'): void;
+    (e: 'getChildren', rowIndex: number): void;
 }>();
 
 // Локальное состояние выделенных строк
@@ -94,6 +136,23 @@ const selectedLocal = computed({
     get: () => props.selected ?? [],
     set: (val: any) => emit('update:selected', val)
 });
+
+const addSelected = (row: Row) => {
+    if (route.name === 'collections' || route.name === 'roles') {
+        selectedLocal.value = [row];
+        return;
+    }
+    if (!selectedLocal.value.includes(row)) {
+        selectedLocal.value = [...selectedLocal.value, row];
+    } else {
+        const index = selectedLocal.value.indexOf(row);
+        if (index > -1) {
+            const newSelected = [...selectedLocal.value];
+            newSelected.splice(index, 1);
+            selectedLocal.value = newSelected;
+        }
+    }
+};
 
 // ПАГИНАЦИЯ
 
@@ -160,23 +219,26 @@ const deleteElement = () => {
 // ВОССТАНОВЛЕНИЕ ЭЛЕМЕНТОВ
 const recoverElement = () => {
     if (selectedLocal.value.length > 0) {
+        console.log('EMIT RECOVER');
         emit('recover-rows');
     }
 };
 
 // Переход на элемент по клику
 
-const go = async (evt: Event, row: Row, _: number) => {
+const go = async (row: Row) => {
     if (route.name === 'collections') {
         if (row && row?.name) {
             await router.push(`/collections/${row?.name}`);
+            // window.open(`/collections/${row?.name}`, '_blank');
             return;
         }
     }
     // Здесь добавить логику если у юзера есть право редактировать, то открывать редактор, если нет, то просто просмотр
     if (route.name === 'collection') {
         if (row && row?.id) {
-            await router.push(`/collections/${route.params.name as string}/${row?.id}`);
+            // await router.push(`/collections/${route.params.name as string}/${row?.id}`);
+            window.open(`/collections/${route.params.name as string}/${row?.id}`, '_blank');
             return;
         }
     }
@@ -188,7 +250,8 @@ const go = async (evt: Event, row: Row, _: number) => {
     }
     if (route.name === 'users') {
         if (row && row?.id) {
-            await router.push(`/users/${row?.id}`);
+            // await router.push(`/users/${row?.id}`);
+            window.open(`/users/${row?.id}`, '_blank');
             return;
         }
     }
