@@ -23,7 +23,7 @@ export interface Scheme {
   name: string;
   display_name: string;
   view_data: ViewData;
-  columns: Column[] | null;
+  columns: Column[];
 }
 
 // Интерфейс для значения предустановленного списка

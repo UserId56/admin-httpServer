@@ -5,28 +5,15 @@
         </q-card-section>
         <q-card-section>
             <q-form @submit="create">
-                <q-input v-model="collection.name" label="Название коллекции" clearable maxlength="64" counter />
+                <q-input v-model="collection.name" label="Название коллекции" clearable maxlength="64" counter
+                    :readonly="isReadOnly" hint="Использовать только латинские буквы, цифры и символы подчеркивания" />
                 <q-input v-model="collection.display_name" label="Отображаемое имя" clearable maxlength="255" counter />
-                <div v-for="(field, index) in collection.columns" :key="index" class="q-mt-md" :class="{
-                    'no-pointer-events no-pointer': (field.column_name === 'id' || field.column_name === 'created_at' || field.column_name === 'updated_at' || field.column_name === 'deleted_at')
-                }">
-                    <q-card class="q-pa-sm q-mb-sm fix-width">
-                        <q-btn icon="close" flat @click="removeColumn(index)"
-                            class="absolute-top-right z-index-99"></q-btn>
-                        <q-card-section class="row justify-between">
-                            <q-input v-model="field.column_name" label="Имя поля" maxlength="64" counter
-                                class="w-100" />
-                            <q-input v-model="field.display_name" label="Название" maxlength="255" counter
-                                class="w-100" />
-                            <q-select v-model="field.data_type" :options="TypeOptions" label="Тип данных"
-                                class="w-100" />
-                            <q-checkbox v-model="field.is_multiple" label="Множественное значение"
-                                :disable="!field.data_type.includes('ref ')" />
-                            <q-checkbox v-model="field.not_null" label="Обязательное поле" />
-                            <q-input v-model="field.default_value" label="Значение по умолчанию" class="w-100" />
-                        </q-card-section>
-                    </q-card>
-                </div>
+                <q-input v-model="collection.view_data.short_view" label="Краткое представление" clearable
+                    hint="Используйте {field_name} для отображения значений полей" maxlength="65" counter />
+                <CollectionColumns :columns="columns" :rows="collection.columns"
+                    v-if="collection.columns && collection.columns.length" :optionDataType="TypeOptions"
+                    @remove:rows="removeColumn" :collectionData="collection"
+                    @update:collection-data="updataCollection" />
                 <q-btn label="Добавить поле" color="deep-orange-9" @click="addColumn" class="q-mt-md"></q-btn>
                 <div class="q-mt-md">
                     <q-btn :label="(route.name === 'collection-edit-collection' ? 'Сохранить' : 'Создать')"
@@ -40,48 +27,174 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { SchemeAPI } from '../API';
 import { Loading } from 'quasar';
 import type { Scheme, Column } from 'src/models/scheme';
 import { useSchemeStore } from 'src/stores/scheme-store';
+import type { QTableColumn } from 'quasar';
+import CollectionColumns from 'src/components/CollectionColumns.vue';
 const router = useRouter();
 const route = useRoute();
 const schemeStore = useSchemeStore();
 
 const TypeOptions = ref([
-    'TEXT',
-    'STRING',
-    'INT',
-    'BIGINT',
-    'FLOAT',
-    'MONEY',
-    'BOOLEAN',
-    'DATE',
-    'TIMESTAMP',
-    'JSON',
+    {
+        label: 'Текст',
+        value: 'TEXT',
+    },
+    {
+        label: 'Строка',
+        value: 'STRING',
+    },
+    {
+        label: 'Число',
+        value: 'INT',
+    },
+    {
+        label: 'Большое число',
+        value: 'BIGINT',
+    },
+    {
+        label: 'Число с плавающей точкой',
+        value: 'FLOAT',
+    },
+    {
+        label: 'Деньги',
+        value: 'MONEY',
+    },
+    {
+        label: 'Булево',
+        value: 'BOOLEAN',
+    },
+    {
+        label: 'Дата',
+        value: 'DATE',
+    },
+    {
+        label: 'Метка времени',
+        value: 'TIMESTAMP',
+    },
+    {
+        label: 'JSON',
+        value: 'JSON',
+    },
 ]);
 
-const collection = ref<Partial<Scheme>>({
+const listSchemes = computed(() => schemeStore.getList);
+
+const collection = ref<Scheme>({
     id: 0,
     CreatedAt: '',
     UpdatedAt: '',
     name: '',
     display_name: '',
-    columns: null,
+    view_data: {
+        short_view: '{id}',
+        hide_menu: false,
+        field_options: [{
+            name: 'id',
+            hidden: false,
+            filterable: false,
+            order: 1,
+            pre_values: []
+        },
+        {
+            name: 'created_at',
+            hidden: false,
+            filterable: false,
+            order: 2,
+            pre_values: []
+        },
+        {
+            name: 'updated_at',
+            hidden: false,
+            filterable: false,
+            order: 3,
+            pre_values: []
+        },
+        {
+            name: 'deleted_at',
+            hidden: true,
+            filterable: false,
+            order: 4,
+            pre_values: []
+        },],
+    },
+    columns: [],
 } as Scheme);
+
+const columns: QTableColumn[] = [
+    {
+        name: 'column_name',
+        label: 'Имя поля',
+        field: 'column_name',
+        align: 'center',
+    },
+    {
+        name: 'display_name',
+        label: 'Название',
+        field: 'display_name',
+        align: 'center',
+    },
+    {
+        name: 'data_type',
+        label: 'Тип данных',
+        field: 'data_type',
+        align: 'center',
+    },
+    {
+        name: 'is_multiple',
+        label: 'Множественное',
+        field: 'is_multiple',
+        align: 'center',
+    },
+    {
+        name: 'not_null',
+        label: 'Обязательное',
+        field: 'not_null',
+        align: 'center',
+    },
+    {
+        name: 'is_unique',
+        label: 'Уникальное',
+        field: 'is_unique',
+        align: 'center',
+    },
+    {
+        name: 'more',
+        label: 'Свойства',
+        field: 'more',
+        align: 'center',
+    }
+]
+
+const updataCollection = (value: Scheme) => {
+    collection.value = value;
+};
+
 onMounted(async () => {
     Loading.show();
     if (route.name === 'collection-edit-collection' && route.params.name) {
         const existingScheme = await SchemeAPI.getSchemeByName(route.params.name as string);
-        collection.value = { ...existingScheme };
+        for (const column of existingScheme?.columns || []) {
+            if (column.data_type === 'ref' && column.referenced_scheme) {
+                column.data_type = 'ref ' + column.referenced_scheme;
+            }
+        }
+        collection.value = { ...existingScheme as Scheme };
     }
-    const listSchemes = schemeStore.getList;
-    if (listSchemes) {
-        const refArray: string[] = [];
-        for (const scheme of listSchemes) {
-            refArray.push('ref ' + scheme.name);
+    if (listSchemes.value === null || listSchemes.value.length === 0) {
+        await schemeStore.getSchemes();
+    }
+    if (listSchemes.value) {
+        const refArray: any[] = [];
+        for (const scheme of listSchemes.value) {
+            refArray.push({
+                label: 'Ссылка: ' + scheme.display_name,
+                value: 'ref ' + scheme.name,
+            });
         }
         TypeOptions.value = TypeOptions.value.concat(refArray);
     }
@@ -92,21 +205,30 @@ const addColumn = () => {
     if (!collection.value.columns) {
         collection.value.columns = [];
     }
-    collection.value.columns.push({
+    const newColumn: Column = {
         id: 0,
         CreatedAt: null,
         UpdatedAt: null,
         DeletedAt: null,
-        dynamic_table_id: collection.value.id,
+        dynamic_table_id: collection.value.id as number,
         column_name: 'new_column_' + (collection.value.columns.length + 1),
         display_name: 'New Column ' + (collection.value.columns.length + 1),
         data_type: 'TEXT',
+        referenced_scheme: null,
         is_multiple: false,
         is_unique: false,
         not_null: false,
         default_value: null,
         validation_rules: null,
-    } as Column);
+    }
+    collection.value.columns.push(newColumn);
+    collection.value.view_data.field_options.push({
+        name: newColumn.column_name,
+        hidden: false,
+        filterable: false,
+        order: collection.value.view_data.field_options.length + 1,
+        pre_values: []
+    })
 };
 
 const create = async () => {
@@ -134,6 +256,14 @@ const create = async () => {
                 delete column.DeletedAt;
                 delete column.dynamic_table_id;
             }
+            collection.value.view_data.field_options.push(
+                {
+                    name: 'owner_id',
+                    hidden: true,
+                    filterable: false,
+                    order: 5,
+                    pre_values: []
+                })
             const result = await SchemeAPI.createScheme(collection.value);
             if (result !== null) {
                 await router.push({ name: 'collections' });
@@ -148,7 +278,12 @@ const create = async () => {
 
 const removeColumn = (index: number) => {
     collection.value.columns?.splice(index, 1);
+    collection.value.view_data?.field_options?.splice(index, 1);
 };
+
+const isReadOnly = computed(() => {
+    return route.name === 'collection-edit-collection' && (collection.value.name === 'users' || collection.value.name === 'roles');
+});
 </script>
 
 <style scoped lang="scss">
