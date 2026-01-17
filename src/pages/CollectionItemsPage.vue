@@ -150,7 +150,7 @@ onMounted(async () => {
                     sortable: true,
                     align: 'left',
                     format: (val: any, row: any) => {
-                        if (field.data_type === 'TIMESTAMP') {
+                        if (field.data_type === 'TIMESTAMP' || field.data_type === 'DATE') {
                             if (!val) return val;
                             const date = new Date(val);
                             return date.toLocaleString();

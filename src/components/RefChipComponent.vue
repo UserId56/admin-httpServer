@@ -23,10 +23,16 @@ const props = defineProps<{
     value: RefItem[];
 }>();
 const showBtn = computed(() => {
+    if (!props.value) {
+        return false;
+    }
     return props.value.length > 3;
 });
 
 const countChips = computed(() => {
+    if (!props.value) {
+        return [];
+    }
     if (props.value.length > 3) {
         return props.value.slice(0, 3);
     }
