@@ -4,8 +4,13 @@
         v-model:selected="selectedLocal" separator="cell" rows-per-page-label="Элементов на странице"
         :pagination-label="setCountTitle" :rows-per-page-options="[25, 50, 100, 200, 500, 1000]"
         v-model:pagination="paginationProxy" @request="updatePag">
-        <template #top-left>
-            <div>
+        <template #top>
+            <div v-if="props.schemeData?.view_data && route.name !== 'roles' && route.name !== 'collections'"
+                class="row justify-end items-center no-wrap full-width q-my-md">
+                <FilterComponent :schemeData="props.schemeData as Scheme" @update="getFilters" />
+                <q-btn icon="search" size="md" flat @click="$emit('search', filters)"></q-btn>
+            </div>
+            <div class="row items-center justify-between full-width">
                 <div class="text-h6 q-pa-sm">{{ props.title }}</div>
                 <q-btn-group>
                     <q-btn color="positive" glossy no-caps label="Создать" :disable="disableBtn.create"
@@ -16,12 +21,8 @@
                     <q-btn color="deep-orange-9" glossy no-caps label="Восстановить" v-show="!disableBtn.recover"
                         @click="recoverElement" />
                 </q-btn-group>
-            </div>
-        </template>
-        <template #top-right>
-            <div class="column">
-                <q-btn icon="search"></q-btn>
-                <q-btn-dropdown class="q-mt-sm" color="primary" :icon="TypeViewIcon" v-if="props.IsHierarchy">
+                <q-space />
+                <q-btn-dropdown color="primary" :icon="TypeViewIcon" v-if="props.IsHierarchy">
                     <q-list>
                         <q-item clickable v-close-popup @click="TypeView = 'all'">
                             <q-item-section>
@@ -49,6 +50,8 @@
 import { ref, watch, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import TableRow from './TableRow.vue';
+import FilterComponent from './FilterComponent.vue';
+import type { Scheme } from 'src/models/scheme';
 const router = useRouter();
 const route = useRoute();
 
@@ -70,7 +73,11 @@ const TypeViewIcon = computed(() => {
     return TypeView.value === 'hierarchy' ? 'menu_open' : 'menu';
 });
 
+const filters = ref<Record<string, any>>({});
 
+const getFilters = (filterData: Record<string, any>) => {
+    filters.value = filterData;
+};
 // Тип строки — допускаем произвольные поля
 type Row = {
     [key: string]: any;
@@ -111,6 +118,7 @@ const props = defineProps<{
     selected?: Row[]
     IsHierarchy?: boolean;
     TypeView?: 'all' | 'hierarchy';
+    schemeData?: Scheme;
 }>();
 
 const disableBtn = ref({
@@ -129,6 +137,7 @@ const emit = defineEmits<{
     (e: 'recover-rows'): void;
     (e: 'typeView', type: 'all' | 'hierarchy'): void;
     (e: 'getChildren', rowIndex: number): void;
+    (e: 'search', filterData: Record<string, any>): void;
 }>();
 
 // Локальное состояние выделенных строк

@@ -3,8 +3,10 @@ import type { AxiosError } from 'axios';
 import { LocalStorage, Notify } from 'quasar';
 import type { APIError } from './models/error';
 import { useUserStore } from 'src/stores/user-store';
-import { RoleAPI } from '.';
+import { useSchemeStore } from 'src/stores/scheme-store';
+import { RoleAPI, UserAPI, ObjectAPI } from '.';
 import { getAppRouter } from 'src/router';
+import { GetIncludeFields } from 'src/helpers/ShortViewPars';
 
 export const setAuthToken = (token: string | null) => {
   if (token) {
@@ -62,4 +64,47 @@ export const handleApiError = async (err: AxiosError) => {
     message: (err.response?.data as APIError)?.error || err.code + ': ' + err.message,
     position: 'top-right',
   });
+};
+
+export const getDataRefField = async (
+  refColection: string,
+  refData?: boolean,
+  search?: string,
+  refDataColumns: Record<string, number[]> = {},
+): Promise<any> => {
+  const schemeStore = useSchemeStore();
+  if (schemeStore.getList.length === 0) {
+    await schemeStore.getSchemes();
+  }
+  let data = null;
+  const include = ['id'].concat(
+    GetIncludeFields(schemeStore.getSchemeByName(refColection)?.view_data.short_view as any),
+  );
+  const reqData = {
+    include: include,
+  };
+  if (refData) {
+    // @ts-expect-error Бесит
+    reqData.where = [
+      {
+        field: 'id',
+        operator: 'in',
+        value: refDataColumns[refColection],
+      },
+    ];
+  }
+  if (search) {
+    // @ts-expect-error Бесит
+    reqData.where = [
+      {
+        query: search,
+      },
+    ];
+  }
+  if (refColection === 'users') {
+    data = await UserAPI.getUsers(reqData);
+  } else {
+    data = await ObjectAPI.getObject(refColection, reqData);
+  }
+  return data;
 };

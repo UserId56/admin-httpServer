@@ -1,6 +1,6 @@
 <template>
     <q-page class="q-pa-md column">
-        <TableElement :columns="columns" :rows="row" title="Коллекции" v-model:pagination="pagination"
+        <TableElement :columns="columns" :rows="row" title="Роли" v-model:pagination="pagination"
             v-model:selected="selected" @delete-rows="onDelete" />
     </q-page>
 </template>

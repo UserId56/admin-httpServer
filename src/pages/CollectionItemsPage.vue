@@ -1,8 +1,9 @@
 <template>
     <q-page class="q-pa-md column">
-        <TableElement :columns="columns" :rows="row" :title="schemeData.display_name" v-model:pagination="pagination"
-            @delete-rows="handleDeleteRows" v-model:selected="selected" @recover-rows="handleRecoverRows"
-            :IsHierarchy="IsHierarchy" :TypeView="TypeView" @type-view="EditView" @getChildren="handlerGetChildren" />
+        <TableElement :columns="columns" :rows="row" :title="schemeData.display_name || ''"
+            v-model:pagination="pagination" @delete-rows="handleDeleteRows" v-model:selected="selected"
+            @recover-rows="handleRecoverRows" :IsHierarchy="IsHierarchy" :TypeView="TypeView" @type-view="EditView"
+            @getChildren="handlerGetChildren" :schemeData="schemeData" @search="handlerSearch" />
     </q-page>
 </template>
 
@@ -33,9 +34,7 @@ const pagination = ref({
     rowsNumber: 0,
     sortBy: 'Костыль, не хочет работать ни как',
 });
-const schemeData = ref<Scheme>({
-    display_name: '',
-} as Scheme);
+const schemeData = ref<Scheme>({} as Scheme);
 
 const include: string[] = [];
 
@@ -153,6 +152,8 @@ const handlerGetChildren = async (rowSearch: any) => {
                             refCollectionData[col.referenced_scheme] = [r[col.column_name]];
                         }
                     }
+                    // @ts-expect-error бесит
+                    refCollectionData[col.referenced_scheme] = [...new Set(refCollectionData[col.referenced_scheme])]
                 }
             }
         }
@@ -160,7 +161,7 @@ const handlerGetChildren = async (rowSearch: any) => {
             const value = refCollectionData[key as keyof typeof refCollectionData];
             let data = {};
             if (key === 'users') {
-                // @ts-expect-error SUKA
+                // @ts-expect-error бесит
                 data = await UserAPI.getUsers({
                     where: [{
                         field: 'id',
@@ -187,6 +188,13 @@ const handlerGetChildren = async (rowSearch: any) => {
     }
 };
 
+let filterParams: Record<string, any> = {};
+
+const handlerSearch = async (filterData: Record<string, any>) => {
+    filterParams = filterData;
+    await getPageData();
+}
+
 const getPageData = async () => {
     if (!pagination.value) return;
     if (getViewType()) {
@@ -205,6 +213,40 @@ const getPageData = async () => {
             operator: 'null',
             value: null
         }];
+    }
+    if (Object.keys(filterParams).length > 0) {
+        reqData.where = reqData.where || [];
+        for (const key of Object.keys(filterParams)) {
+            if (key === 'fieldOperatorOptions') {
+                continue;
+            }
+            if (key === 'search' && filterParams[key]) {
+                reqData.where.push({
+                    query: filterParams[key]
+                });
+                continue;
+            }
+            if (filterParams[key] !== undefined && filterParams[key] !== '') {
+                let operator = 'eq';
+                if (Array.isArray(filterParams[key])) {
+                    operator = 'in';
+                }
+                if (typeof filterParams[key] === 'string') {
+                    operator = 'iLike';
+                }
+                if (filterParams['fieldOperatorOptions'] && filterParams['fieldOperatorOptions'][key]) {
+                    operator = filterParams['fieldOperatorOptions'][key].value;
+                    if (operator === 'notNull' || operator === 'null') {
+                        filterParams[key] = null;
+                    }
+                }
+                reqData.where.push({
+                    field: key,
+                    operator: operator,
+                    value: filterParams[key]
+                });
+            }
+        }
     }
     if (pagination.value.sortBy) {
         reqData.order = [{
@@ -232,23 +274,25 @@ const getPageData = async () => {
                     if (!r[col.column_name]) {
                         continue;
                     }
-                    // @ts-expect-error SUKA
+                    // @ts-expect-error бесит
                     if (refCollectionData[col.referenced_scheme]) {
                         if (col.is_multiple) {
-                            // @ts-expect-error SUKA
+                            // @ts-expect-error бесит
                             refCollectionData[col.referenced_scheme].push(...r[col.column_name]);
                         }
-                        // @ts-expect-error SUKA
+                        // @ts-expect-error бесит
                         refCollectionData[col.referenced_scheme].push(r[col.column_name]);
                     } else {
                         if (col.is_multiple) {
-                            // @ts-expect-error SUKA
+                            // @ts-expect-error бесит
                             refCollectionData[col.referenced_scheme] = [...r[col.column_name]];
                         } else {
-                            // @ts-expect-error SUKA
+                            // @ts-expect-error бесит
                             refCollectionData[col.referenced_scheme] = [r[col.column_name]];
                         }
                     }
+                    // @ts-expect-error бесит
+                    refCollectionData[col.referenced_scheme] = [...new Set(refCollectionData[col.referenced_scheme])]
                 }
             }
         }
@@ -261,7 +305,7 @@ const getPageData = async () => {
                     where: [{
                         field: 'id',
                         operator: 'in',
-                        value: value
+                        value: [...new Set(value)]
                     }],
                 })
             } else {
@@ -269,7 +313,7 @@ const getPageData = async () => {
                     where: [{
                         field: 'id',
                         operator: 'in',
-                        value: value
+                        value: [...new Set(value)]
                     }],
                 });
             }
