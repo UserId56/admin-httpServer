@@ -287,13 +287,14 @@ const filterFn = async (
 //         }
 //     }
 // });
-watch(() => props.schemeData, (sd) => {
-    if (!sd) return;
+watch(() => props.schemeData, (shemaData) => {
+    if (!shemaData) return;
     colData.value = [];
-    for (const col of sd.view_data?.field_options ?? []) {
+    for (const col of Object.keys(shemaData.view_data?.field_options) ?? []) {
         if (!col) continue;
-        if (col.filterable) {
-            const schemeCol = sd.columns?.find((c: any) => c.column_name === col.name);
+        // @ts-expect-error ignore
+        if (shemaData.view_data?.field_options[col].filterable) {
+            const schemeCol = shemaData.columns?.find((c: any) => c.column_name === col);
             if (schemeCol) {
                 colData.value.push(schemeCol);
                 if (schemeCol.data_type === 'ref') {

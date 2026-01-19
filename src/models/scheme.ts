@@ -36,7 +36,6 @@ export interface PreValue {
 
 // Опции поля вида/таблицы
 export interface FieldOptions {
-  name: string;
   hidden: boolean;
   filterable: boolean;
   order: number;
@@ -48,5 +47,5 @@ export interface FieldOptions {
 export interface ViewData {
   short_view: string;
   hide_menu: boolean;
-  field_options: FieldOptions[];
+  field_options: Record<string, FieldOptions>;
 }
