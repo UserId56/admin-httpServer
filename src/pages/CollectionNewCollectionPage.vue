@@ -31,13 +31,21 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { SchemeAPI } from '../API';
 import { Loading } from 'quasar';
-import type { Scheme, Column } from 'src/models/scheme';
+import type { Scheme, Column, FieldOptions } from 'src/models/scheme';
 import { useSchemeStore } from 'src/stores/scheme-store';
 import type { QTableColumn } from 'quasar';
 import CollectionColumns from 'src/components/CollectionColumns.vue';
 const router = useRouter();
 const route = useRoute();
 const schemeStore = useSchemeStore();
+
+export type SchemeColumn = Column & {
+    field_options: FieldOptions;
+}
+
+export type SchemeWithFieldOptions = Scheme & {
+    columns: SchemeColumn[];
+}
 
 const TypeOptions = ref([
     {
@@ -84,7 +92,7 @@ const TypeOptions = ref([
 
 const listSchemes = computed(() => schemeStore.getList);
 
-const collection = ref<Scheme>({
+const collection = ref<SchemeWithFieldOptions>({
     id: 0,
     CreatedAt: '',
     UpdatedAt: '',
@@ -93,37 +101,35 @@ const collection = ref<Scheme>({
     view_data: {
         short_view: '{id}',
         hide_menu: false,
-        field_options: [{
-            name: 'id',
-            hidden: false,
-            filterable: false,
-            order: 1,
-            pre_values: []
+        field_options: {
+            id: {
+                hidden: false,
+                filterable: true,
+                order: 1,
+                pre_values: []
+            },
+            created_at: {
+                hidden: false,
+                filterable: true,
+                order: 2,
+                pre_values: []
+            },
+            updated_at: {
+                hidden: false,
+                filterable: true,
+                order: 3,
+                pre_values: []
+            },
+            deleted_at: {
+                hidden: true,
+                filterable: false,
+                order: 4,
+                pre_values: []
+            },
         },
-        {
-            name: 'created_at',
-            hidden: false,
-            filterable: false,
-            order: 2,
-            pre_values: []
-        },
-        {
-            name: 'updated_at',
-            hidden: false,
-            filterable: false,
-            order: 3,
-            pre_values: []
-        },
-        {
-            name: 'deleted_at',
-            hidden: true,
-            filterable: false,
-            order: 4,
-            pre_values: []
-        },],
     },
     columns: [],
-} as Scheme);
+} as SchemeWithFieldOptions);
 
 const columns: QTableColumn[] = [
     {
@@ -170,7 +176,7 @@ const columns: QTableColumn[] = [
     }
 ]
 
-const updataCollection = (value: Scheme) => {
+const updataCollection = (value: SchemeWithFieldOptions) => {
     collection.value = value;
 };
 
@@ -183,7 +189,11 @@ onMounted(async () => {
                 column.data_type = 'ref ' + column.referenced_scheme;
             }
         }
-        collection.value = { ...existingScheme as Scheme };
+        collection.value = { ...existingScheme as SchemeWithFieldOptions };
+        for (const col of collection.value.columns) {
+            // @ts-expect-error -- ignore
+            col.field_options = collection.value.view_data.field_options[col.column_name];
+        }
     }
     if (listSchemes.value === null || listSchemes.value.length === 0) {
         await schemeStore.getSchemes();
@@ -205,7 +215,7 @@ const addColumn = () => {
     if (!collection.value.columns) {
         collection.value.columns = [];
     }
-    const newColumn: Column = {
+    const newColumn: SchemeColumn = {
         id: 0,
         CreatedAt: null,
         UpdatedAt: null,
@@ -220,15 +230,14 @@ const addColumn = () => {
         not_null: false,
         default_value: null,
         validation_rules: null,
+        field_options: {
+            hidden: false,
+            filterable: false,
+            order: collection.value.columns.length + 5,
+            pre_values: []
+        },
     }
     collection.value.columns.push(newColumn);
-    collection.value.view_data.field_options.push({
-        name: newColumn.column_name,
-        hidden: false,
-        filterable: false,
-        order: collection.value.view_data.field_options.length + 1,
-        pre_values: []
-    })
 };
 
 const create = async () => {
@@ -240,6 +249,11 @@ const create = async () => {
             column.referenced_scheme = parts[1] as string;
         }
     }
+    const viewData: Record<string, FieldOptions> = {};
+    for (const col of collection.value.columns || []) {
+        viewData[col.column_name] = col.field_options;
+    }
+    collection.value.view_data.field_options = viewData;
     try {
         if (route.name === 'collection-edit-collection') {
             await SchemeAPI.updateScheme(collection.value);
@@ -256,14 +270,30 @@ const create = async () => {
                 delete column.DeletedAt;
                 delete column.dynamic_table_id;
             }
-            collection.value.view_data.field_options.push(
-                {
-                    name: 'owner_id',
-                    hidden: true,
-                    filterable: false,
-                    order: 5,
-                    pre_values: []
-                })
+            collection.value.view_data.field_options['id'] = {
+                hidden: false,
+                filterable: true,
+                order: 1,
+                pre_values: []
+            };
+            collection.value.view_data.field_options['created_at'] = {
+                hidden: false,
+                filterable: true,
+                order: 2,
+                pre_values: []
+            };
+            collection.value.view_data.field_options['updated_at'] = {
+                hidden: false,
+                filterable: true,
+                order: 3,
+                pre_values: []
+            };
+            collection.value.view_data.field_options['deleted_at'] = {
+                hidden: true,
+                filterable: false,
+                order: 4,
+                pre_values: []
+            };
             const result = await SchemeAPI.createScheme(collection.value);
             if (result !== null) {
                 await router.push({ name: 'collections' });
@@ -277,8 +307,10 @@ const create = async () => {
 };
 
 const removeColumn = (index: number) => {
+    const col = collection.value.columns[index];
     collection.value.columns?.splice(index, 1);
-    collection.value.view_data?.field_options?.splice(index, 1);
+    // @ts-expect-error -- ignore
+    delete collection.value.view_data.field_options[col.column_name];
 };
 
 const isReadOnly = computed(() => {
