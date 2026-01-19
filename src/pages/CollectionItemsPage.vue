@@ -152,8 +152,6 @@ const handlerGetChildren = async (rowSearch: any) => {
                             refCollectionData[col.referenced_scheme] = [r[col.column_name]];
                         }
                     }
-                    // @ts-expect-error бесит
-                    refCollectionData[col.referenced_scheme] = [...new Set(refCollectionData[col.referenced_scheme])]
                 }
             }
         }
@@ -279,9 +277,10 @@ const getPageData = async () => {
                         if (col.is_multiple) {
                             // @ts-expect-error бесит
                             refCollectionData[col.referenced_scheme].push(...r[col.column_name]);
+                        } else {
+                            // @ts-expect-error бесит
+                            refCollectionData[col.referenced_scheme].push(r[col.column_name]);
                         }
-                        // @ts-expect-error бесит
-                        refCollectionData[col.referenced_scheme].push(r[col.column_name]);
                     } else {
                         if (col.is_multiple) {
                             // @ts-expect-error бесит
@@ -291,8 +290,7 @@ const getPageData = async () => {
                             refCollectionData[col.referenced_scheme] = [r[col.column_name]];
                         }
                     }
-                    // @ts-expect-error бесит
-                    refCollectionData[col.referenced_scheme] = [...new Set(refCollectionData[col.referenced_scheme])]
+                    console.log('refCollectionData 1', refCollectionData);
                 }
             }
         }
