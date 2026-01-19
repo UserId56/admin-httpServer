@@ -206,6 +206,12 @@ onMounted(async () => {
                 value: 'ref ' + scheme.name,
             });
         }
+        if (route.name === 'collection-new-collection') {
+            refArray.push({
+                label: 'Ссылка на себя',
+                value: 'ref _$self',
+            });
+        }
         TypeOptions.value = TypeOptions.value.concat(refArray);
     }
     Loading.hide();
@@ -246,7 +252,11 @@ const create = async () => {
         if (column.data_type.includes('ref')) {
             const parts = column.data_type.split(' ');
             column.data_type = parts[0] as string;
-            column.referenced_scheme = parts[1] as string;
+            if (parts[1] === '_$self') {
+                column.referenced_scheme = collection.value.name;
+            } else {
+                column.referenced_scheme = parts[1] as string;
+            }
         }
     }
     const viewData: Record<string, FieldOptions> = {};
