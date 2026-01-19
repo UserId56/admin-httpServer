@@ -147,13 +147,14 @@ const selectedLocal = computed({
 });
 
 const addSelected = (row: Row) => {
-    if (route.name === 'collections' || route.name === 'roles') {
-        selectedLocal.value = [row];
-        return;
-    }
     if (!selectedLocal.value.includes(row)) {
         selectedLocal.value = [...selectedLocal.value, row];
-    } else {
+    }
+    else {
+        if (route.name === 'collections' || route.name === 'roles') {
+            selectedLocal.value = [];
+            return;
+        }
         const index = selectedLocal.value.indexOf(row);
         if (index > -1) {
             const newSelected = [...selectedLocal.value];
@@ -161,6 +162,8 @@ const addSelected = (row: Row) => {
             selectedLocal.value = newSelected;
         }
     }
+
+
 };
 
 // ПАГИНАЦИЯ
