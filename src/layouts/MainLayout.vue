@@ -14,7 +14,8 @@
       @mouseleave="miniState = true">
       <q-list>
 
-        <LeftMenuItemComponent v-for="link in linksList" :key="link.title" v-bind="link" @go-link="miniState = true" />
+        <LeftMenuItemComponent v-for="link in linksLeftMenu" :key="link.title" v-bind="link"
+          @go-link="miniState = true" />
       </q-list>
     </q-drawer>
 
@@ -25,8 +26,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import LeftMenuItemComponent, { type LeftMenuItem } from 'components/LeftMenuItem.vue';
+import { useSchemeStore } from 'src/stores/scheme-store';
+
+const schemeStore = useSchemeStore();
+
+const linksLeftMenu = computed<LeftMenuItem[]>(() => {
+  const collections = schemeStore.ListSchemes
+  const tempList: Array<LeftMenuItem> = []
+  for (const collection of collections) {
+    if (collection.name === 'users' || collection.name === 'roles' || collection.name === 'files') {
+      continue;
+    }
+    if (collection.view_data && collection.view_data.hide_menu) {
+      continue;
+    }
+    tempList.push({
+      title: collection.display_name,
+      link: `/collections/${collection.name}`,
+      icon: 'mdi-folder-table',
+    })
+  }
+  return [
+    ...tempList,
+    ...linksList
+  ]
+})
+
+onMounted(async () => {
+  if (schemeStore.ListSchemes.length === 0) {
+    await schemeStore.getSchemes();
+  }
+})
+
 
 const linksList: Array<LeftMenuItem> = [
   {
