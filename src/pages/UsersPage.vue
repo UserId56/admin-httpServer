@@ -57,6 +57,14 @@ onMounted(async () => {
                 field: col.column_name,
                 sortable: true,
                 align: 'left',
+                format: (val: any) => {
+                    if (col.data_type === 'TIMESTAMP' || col.data_type === 'DATE') {
+                        if (!val) return val;
+                        const date = new Date(val);
+                        return date.toLocaleString();
+                    }
+                    return val;
+                }
             });
             includedColumns.push(col.column_name);
         }

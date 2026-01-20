@@ -10,6 +10,7 @@
                 <q-input v-model="collection.display_name" label="Отображаемое имя" clearable maxlength="255" counter />
                 <q-input v-model="collection.view_data.short_view" label="Краткое представление" clearable
                     hint="Используйте {field_name} для отображения значений полей" maxlength="65" counter />
+                <q-checkbox v-model="collection.view_data.hide_menu" label="Скрыть в меню"></q-checkbox>
                 <CollectionColumns :columns="columns" :rows="collection.columns"
                     v-if="collection.columns && collection.columns.length" :optionDataType="TypeOptions"
                     @remove:rows="removeColumn" :collectionData="collection"
@@ -267,6 +268,7 @@ const create = async () => {
     try {
         if (route.name === 'collection-edit-collection') {
             await SchemeAPI.updateScheme(collection.value);
+            await schemeStore.getSchemes();
             await router.push({ name: 'collections' });
         } else {
             delete collection.value.id;

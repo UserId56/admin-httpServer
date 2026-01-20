@@ -40,6 +40,7 @@ onMounted(async () => {
       (loadPagination as typeof pagination.value).page = parseInt(page as string);
     }
     pagination.value = loadPagination as typeof pagination.value;
+    return;
   }
   if (schemeStore.ListSchemes.length === 0) {
     await schemeStore.getSchemes();

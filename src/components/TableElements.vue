@@ -75,6 +75,9 @@ const columns = computed(() => {
             // @ts-expect-error ignore
             order: props.schemeData.view_data.field_options[col.field].order,
         };
+        if (col.format) {
+            column.format = col.format;
+        }
         columnsResult.push(column);
     }
     return columnsResult.sort((a, b) => a.order - b.order) as QTableColumn[];
