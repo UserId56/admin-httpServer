@@ -172,6 +172,10 @@ const selectedLocal = computed({
 
 const addSelected = (row: Row) => {
     if (!selectedLocal.value.includes(row)) {
+        if (route.name === 'collections' || route.name === 'roles') {
+            selectedLocal.value = [row];
+            return;
+        }
         selectedLocal.value = [...selectedLocal.value, row];
     }
     else {
