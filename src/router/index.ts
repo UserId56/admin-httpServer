@@ -7,6 +7,7 @@ import {
 } from 'vue-router';
 import routes from './routes';
 import { useUserStore } from 'src/stores/user-store';
+import { useSettingsStore } from 'src/stores/settings';
 import { loadStoredToken } from 'src/API/http';
 
 /*
@@ -40,7 +41,7 @@ export default defineRouter(function (/* { store, ssrContext } */) {
   Router.beforeEach(async (to, from, next) => {
     console.log('Router beforeEach');
     const userStore = useUserStore();
-
+    const settingsStore = useSettingsStore();
     if (!userStore.isAuth) {
       const ok = await loadStoredToken();
       if (ok) {
@@ -55,6 +56,7 @@ export default defineRouter(function (/* { store, ssrContext } */) {
           }
         }
         userStore.setAuth();
+        await settingsStore.getSettingsData();
       }
     }
 

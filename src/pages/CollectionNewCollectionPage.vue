@@ -83,7 +83,7 @@ const TypeOptions = ref([
     },
     {
         label: 'Метка времени',
-        value: 'TIMESTAMP',
+        value: 'TIMESTAMPTZ',
     },
     {
         label: 'JSON',

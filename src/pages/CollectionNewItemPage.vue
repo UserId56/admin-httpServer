@@ -17,7 +17,7 @@
                         <q-checkbox v-else-if="column.data_type === 'BOOLEAN'" v-model="newItem[column.column_name]"
                             :label="column.display_name" :clearable="route.name !== 'collection-item'"
                             :readonly="route.name === 'collection-item'" />
-                        <q-input class="max-width-200" v-else-if="column.data_type === 'TIMESTAMP'"
+                        <q-input class="max-width-200" v-else-if="column.data_type === 'TIMESTAMPTZ'"
                             v-model="newItem[column.column_name]" type="datetime-local"
                             :clearable="route.name !== 'collection-item'"
                             :readonly="route.name === 'collection-item'" />
@@ -178,6 +178,16 @@ onMounted(async () => {
     if ((route.name === 'collection-item-edit' || route.name === 'collection-item') && route.params.id) {
         const existingItem = await ObjectAPI.getObjectById(collectionName, Number(route.params.id));
         for (const column of schemeData.value.columns) {
+            if (column.data_type === 'TIMESTAMPTZ') {
+                const dateTime = existingItem[column.column_name];
+                const splitData = dateTime ? dateTime.split('+') : null;
+                existingItem[column.column_name] = splitData ? splitData[0] : null;
+            }
+            if (column.data_type === 'DATE') {
+                const date = existingItem[column.column_name];
+                const splitData = date ? date.split('T') : null;
+                existingItem[column.column_name] = splitData ? splitData[0] : null;
+            }
             if (column.data_type === 'ref') {
                 if (existingItem[column.column_name] === null || existingItem[column.column_name] === undefined || existingItem[column.column_name].length === 0) {
                     continue;

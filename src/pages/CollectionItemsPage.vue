@@ -19,8 +19,11 @@ import { Dialog, LocalStorage } from 'quasar';
 import { useUserStore } from 'src/stores/user-store';
 import { useSchemeStore } from 'src/stores/scheme-store';
 import { ShortViewPars } from 'src/helpers/ShortViewPars';
+import { parseDateTime } from 'src/helpers/DateTimePars';
+import { useSettingsStore } from 'src/stores/settings';
 const userStore = useUserStore();
 const schemeStore = useSchemeStore();
+const settingsStore = useSettingsStore();
 
 const route = useRoute();
 const router = useRouter();
@@ -290,7 +293,6 @@ const getPageData = async () => {
                             refCollectionData[col.referenced_scheme] = [r[col.column_name]];
                         }
                     }
-                    console.log('refCollectionData 1', refCollectionData);
                 }
             }
         }
@@ -363,10 +365,8 @@ onMounted(async () => {
                     sortable: true,
                     align: 'left',
                     format: (val: any, row: any) => {
-                        if (field.data_type === 'TIMESTAMP' || field.data_type === 'DATE') {
-                            if (!val) return val;
-                            const date = new Date(val);
-                            return date.toLocaleString();
+                        if (field.data_type === 'TIMESTAMPTZ' || field.data_type === 'DATE') {
+                            return parseDateTime(val, field.data_type, settingsStore.getTimeZone);
                         }
                         if (rowRef.includes(field.column_name)) {
                             let shortView = '';

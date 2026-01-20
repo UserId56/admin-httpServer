@@ -18,10 +18,13 @@ import type { ReqData } from 'src/models/query';
 import { useUserStore } from 'src/stores/user-store';
 import { LocalStorage } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
+import { parseDateTime } from 'src/helpers/DateTimePars';
+import { useSettingsStore } from 'src/stores/settings';
 
 const userStore = useUserStore();
 const route = useRoute();
 const router = useRouter();
+const settingsStore = useSettingsStore();
 
 const columns = ref<Column[]>([]);
 const row = ref<Array<any>>([]);
@@ -58,10 +61,8 @@ onMounted(async () => {
                 sortable: true,
                 align: 'left',
                 format: (val: any) => {
-                    if (col.data_type === 'TIMESTAMP' || col.data_type === 'DATE') {
-                        if (!val) return val;
-                        const date = new Date(val);
-                        return date.toLocaleString();
+                    if (col.data_type === 'TIMESTAMPTZ' || col.data_type === 'DATE') {
+                        return parseDateTime(val, col.data_type, settingsStore.getTimeZone);
                     }
                     return val;
                 }
