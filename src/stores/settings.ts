@@ -18,6 +18,9 @@ export const useSettingsStore = defineStore('settings', {
     getSettings: (state): Settings => {
       return state;
     },
+    getDefaultUserRoleId(): number | null {
+      return this.default_role_id;
+    },
   },
   actions: {
     async getSettingsData() {

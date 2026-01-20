@@ -27,12 +27,13 @@
 import { ref, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { UserAPI, RoleAPI } from 'src/API';
+import { useSettingsStore } from 'src/stores/settings';
 import type { Users } from 'src/models/users';
 import type { Role } from 'src/models/roles';
 
 const router = useRouter();
 const route = useRoute();
-
+const settingsStore = useSettingsStore();
 const userId = ref<number | null>(null);
 
 let oldUser = {} as Users;
@@ -59,14 +60,12 @@ onMounted(async () => {
             oldUser = { ...userData };
         }
     } else {
-        // @ts-expect-error Бесит
         user.value = {
             id: 0,
             username: '',
             email: '',
             password: '',
-            // @ts-expect-error Бесит
-            role_id: roles.value.length > 0 ? roles.value[0].id : 0,
+            role_id: settingsStore.getDefaultUserRoleId ?? 1,
         };
     }
 });
