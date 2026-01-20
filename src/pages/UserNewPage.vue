@@ -42,7 +42,7 @@ const user = ref<Partial<Users>>({
     username: '',
     email: '',
     password: '',
-    role_id: 23,
+    role_id: 0,
 });
 
 const roles = ref<Array<Role>>([]);
@@ -58,6 +58,16 @@ onMounted(async () => {
             user.value = userData;
             oldUser = { ...userData };
         }
+    } else {
+        // @ts-expect-error Бесит
+        user.value = {
+            id: 0,
+            username: '',
+            email: '',
+            password: '',
+            // @ts-expect-error Бесит
+            role_id: roles.value.length > 0 ? roles.value[0].id : 0,
+        };
     }
 });
 
