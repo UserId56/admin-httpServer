@@ -27,12 +27,13 @@
 import { ref, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { UserAPI, RoleAPI } from 'src/API';
+import { useSettingsStore } from 'src/stores/settings';
 import type { Users } from 'src/models/users';
 import type { Role } from 'src/models/roles';
 
 const router = useRouter();
 const route = useRoute();
-
+const settingsStore = useSettingsStore();
 const userId = ref<number | null>(null);
 
 let oldUser = {} as Users;
@@ -42,7 +43,7 @@ const user = ref<Partial<Users>>({
     username: '',
     email: '',
     password: '',
-    role_id: 23,
+    role_id: 0,
 });
 
 const roles = ref<Array<Role>>([]);
@@ -58,6 +59,14 @@ onMounted(async () => {
             user.value = userData;
             oldUser = { ...userData };
         }
+    } else {
+        user.value = {
+            id: 0,
+            username: '',
+            email: '',
+            password: '',
+            role_id: settingsStore.getDefaultUserRoleId ?? 1,
+        };
     }
 });
 
