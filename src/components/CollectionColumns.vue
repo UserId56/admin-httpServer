@@ -18,8 +18,8 @@
                 <q-checkbox v-model="collectionDataProvided.columns[rowIndex][col.name]"
                     v-else-if="col.name === 'is_multiple' || col.name === 'not_null' || col.name === 'is_unique'"
                     :disable="isReadable(row)" />
-                <q-btn-group push v-else-if="col.name === 'more'"><q-btn @click="openDialog(row, rowIndex)"
-                        :disable="isReadable(row)">Свойства</q-btn><q-btn icon="delete"
+                <q-btn-group push v-else-if="col.name === 'more'"><q-btn
+                        @click="openDialog(row, rowIndex)">Свойства</q-btn><q-btn icon="delete"
                         @click="emit('remove:rows', rowIndex)" :disable="isReadable(row)" /></q-btn-group>
             </q-td>
         </template>
@@ -33,7 +33,7 @@
             <q-card-section class="column">
                 <!-- @vue-expect-error -->
                 <q-input type="number"
-                    v-model="collectionDataProvided.columns[currentRowIndex as number].field_options.order"
+                    v-model.number="collectionDataProvided.columns[currentRowIndex as number].field_options.order"
                     label="Сортировка" />
                 <!-- @vue-expect-error -->
                 <q-checkbox v-model="collectionDataProvided.columns[currentRowIndex as number].field_options.hidden"
