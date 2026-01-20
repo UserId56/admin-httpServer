@@ -2,7 +2,7 @@
     <div>
         <q-page class="q-pa-md column">
             <TableElement :columns="columns" :rows="row" title="Пользователи" v-model:pagination="pagination"
-                v-model:selected="selected" @delete-rows="onDelete" />
+                v-model:selected="selected" @delete-rows="onDelete" :schemeData="schemeUsers" />
         </q-page>
     </div>
 </template>
@@ -13,6 +13,7 @@ import { UserAPI, RoleAPI, SchemeAPI } from 'src/API';
 import TableElement from 'components/TableElements.vue';
 import type { Column } from 'components/TableElements.vue';
 import type { Role } from 'src/models/roles';
+import type { Scheme } from 'src/models/scheme';
 import type { ReqData } from 'src/models/query';
 import { useUserStore } from 'src/stores/user-store';
 import { LocalStorage } from 'quasar';
@@ -35,10 +36,15 @@ const pagination = ref({
 const includedColumns: string[] = []
 const roles = ref<Array<Role>>([]);
 const permission = userStore.permission;
+const schemeUsers = ref<Scheme>({} as Scheme);
+
 onMounted(async () => {
-    const schemeUsers = await SchemeAPI.getSchemeByName('users');
-    if (schemeUsers && schemeUsers.columns) {
-        for (const col of schemeUsers.columns) {
+    const result = await SchemeAPI.getSchemeByName('users');
+    if (result) {
+        schemeUsers.value = result;
+    }
+    if (schemeUsers.value && schemeUsers.value.columns) {
+        for (const col of schemeUsers.value.columns) {
             if (col.column_name === 'password') {
                 continue
             }

@@ -1,5 +1,5 @@
 <template>
-    <q-table class="full-width" :rows="props.rows" :columns="props.columns" :row-key="(row) => row.id ? row.id : row.ID"
+    <q-table class="full-width" :rows="props.rows" :columns="columns" :row-key="(row) => row.id ? row.id : row.ID"
         :selection="(route.name === 'collections' || route.name === 'roles') ? 'single' : 'multiple'"
         v-model:selected="selectedLocal" separator="cell" rows-per-page-label="Элементов на странице"
         :pagination-label="setCountTitle" :rows-per-page-options="[25, 50, 100, 200, 500, 1000]"
@@ -52,9 +52,33 @@ import { useRouter, useRoute } from 'vue-router';
 import TableRow from './TableRow.vue';
 import FilterComponent from './FilterComponent.vue';
 import type { Scheme } from 'src/models/scheme';
+import type { QTableColumn } from 'quasar';
 const router = useRouter();
 const route = useRoute();
 
+
+const columns = computed(() => {
+    if (!props.schemeData || !props.schemeData.view_data) {
+        return props.columns as QTableColumn[];
+    }
+    const columnsResult: any[] = [];
+    for (const col of props.columns) {
+        if (props.schemeData.view_data?.field_options[col.field as keyof typeof props.schemeData.view_data.field_options]?.hidden) {
+            continue;
+        }
+        const column: QTableColumn = {
+            name: col.name,
+            label: col.label,
+            field: col.field,
+            align: col.align ?? 'left',
+            sortable: col.sortable ?? false,
+            // @ts-expect-error ignore
+            order: props.schemeData.view_data.field_options[col.field].order,
+        };
+        columnsResult.push(column);
+    }
+    return columnsResult.sort((a, b) => a.order - b.order) as QTableColumn[];
+});
 
 // Запрос дочернихъ элементов
 const getChildren = (row: any) => {

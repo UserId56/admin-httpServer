@@ -304,6 +304,12 @@ const create = async () => {
                 order: 4,
                 pre_values: []
             };
+            collection.value.view_data.field_options['owner_id'] = {
+                hidden: true,
+                filterable: false,
+                order: collection.value.columns.length + 5,
+                pre_values: []
+            };
             const result = await SchemeAPI.createScheme(collection.value);
             if (result !== null) {
                 await router.push({ name: 'collections' });
