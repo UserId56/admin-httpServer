@@ -27,7 +27,7 @@ const settingsStore = useSettingsStore();
 
 const route = useRoute();
 const router = useRouter();
-const collectionName = route.params.name as string;
+const collectionName = computed(() => route.params.name as string);
 const columns = ref<Column[]>([]);
 const row = ref([]);
 const pagination = ref({
@@ -39,13 +39,13 @@ const pagination = ref({
 });
 const schemeData = ref<Scheme>({} as Scheme);
 
-const include: string[] = [];
+let include: string[] = [];
 
 const permission = userStore.permission;
 
 let refCollectionData = {};
 const fetchCollectionData = {};
-const rowRef: string[] = [];
+let rowRef: string[] = [];
 
 const IsHierarchy = ref(false);
 const refPearent = ref('')
@@ -127,7 +127,7 @@ const handlerGetChildren = async (rowSearch: any) => {
             value: parentId
         }]
     };
-    const objectsData = await ObjectAPI.getObject(collectionName, reqData);
+    const objectsData = await ObjectAPI.getObject(collectionName.value, reqData);
     if (objectsData) {
         for (const r of objectsData.data) {
             for (const col of schemeData.value.columns || []) {
@@ -255,7 +255,7 @@ const getPageData = async () => {
             direction: pagination.value.descending ? 'desc' : 'asc'
         }]
     }
-    const objectsData = await ObjectAPI.getObject(collectionName, reqData);
+    const objectsData = await ObjectAPI.getObject(collectionName.value, reqData);
     if (objectsData) {
         if (!objectsData.data) {
             row.value = [];
@@ -333,17 +333,24 @@ const selected = ref<Array<any>>([]);
 
 const schemeList = computed(() => schemeStore.getList || []);
 
-onMounted(async () => {
+const initCollection = async () => {
+    // сброс состояния
+    columns.value = [];
+    row.value = [];
+    pagination.value.page = 1;
+    refCollectionData = {};
+    include = []
+    rowRef = [];
     if (schemeList.value.length === 0) {
         await schemeStore.getSchemes();
     }
-    const data = await SchemeAPI.getSchemeByName(collectionName);
+    const data = await SchemeAPI.getSchemeByName(collectionName.value);
     if (data) {
         schemeData.value = data;
         // Формируем колонки таблицы на основе полей схемы
         if (data.columns) {
             data.columns.forEach((field: SchemeColumn) => {
-                if (permission && permission.includes(`${collectionName}.${field.column_name}.forbidden`)) {
+                if (permission && permission.includes(`${collectionName.value}.${field.column_name}.forbidden`)) {
                     return;
                 }
                 include.push(field.column_name);
@@ -385,7 +392,7 @@ onMounted(async () => {
                 });
             });
         }
-        const loadPagination = LocalStorage.getItem(`${collectionName}-pagination`);
+        const loadPagination = LocalStorage.getItem(`${collectionName.value}-pagination`);
         const page = route.query.page;
         if (loadPagination) {
             if (page) {
@@ -398,6 +405,10 @@ onMounted(async () => {
         }
         await getPageData();
     }
+}
+
+onMounted(async () => {
+    await initCollection();
 });
 
 const handleDeleteRows = async () => {
@@ -431,7 +442,7 @@ const handleDeleteRows = async () => {
                 continue;
             }
             console.log('delete request for id', id);
-            await ObjectAPI.deleteObject(collectionName, id);
+            await ObjectAPI.deleteObject(collectionName.value, id);
         }
         selected.value = [];
         await getPageData();
@@ -452,7 +463,7 @@ const handleRecoverRows = async () => {
             if (route.params.name === 'users') {
                 await UserAPI.recoverUser(id);
             } else {
-                await ObjectAPI.recoverObject(collectionName, id);
+                await ObjectAPI.recoverObject(collectionName.value, id);
             }
         }
         selected.value = [];
@@ -482,8 +493,14 @@ watch(pagination, async (newValue, oldValue) => {
         refCollectionData = {};
         const savePagination = { ...pagination.value };
         savePagination.page = 1;
-        LocalStorage.setItem(`${collectionName}-pagination`, savePagination);
+        LocalStorage.setItem(`${collectionName.value}-pagination`, savePagination);
         await getPageData();
+    }
+});
+
+watch(collectionName, async (newName, oldName) => {
+    if (newName !== oldName) {
+        await initCollection();
     }
 });
 
