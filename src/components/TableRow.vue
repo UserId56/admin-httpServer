@@ -1,15 +1,24 @@
 <template>
     <q-tr :props="propsTable" :class="styleClass" @click="goChildren(propsTable.row)">
-        <q-td auto-width>
+        <q-td>
             <q-checkbox :model-value="checkSelected(propsTable.row)"
                 @update:model-value="emit('addSelected', propsTable.row)" @click.stop />
         </q-td>
-        <q-td class="cursor-pointer" v-for="(col, index) in propsTable.cols" :key="col.name" :props="propsTable">
+        <q-td class="cursor-pointer" v-for="(col, index) in propsTable.cols" :key="col.name" :props="propsTable"
+            style="max-width: 500px;">
+            <!-- Выше надо убрать этот стайл и наверное делать настройки в коллекции -->
             <template v-if="!col.name.includes('ref') && !col.name.includes('BOOLEAN')">
                 <div class="row items-center">
-                    <span>{{ col.format ? col.format(propsTable.row[col.field as keyof typeof propsTable.row],
+                    <span class="ellipsis overflow-hidden">{{ col.format ? col.format(propsTable.row[col.field as
+                        keyof typeof
+                        propsTable.row],
                         propsTable.row) :
-                        propsTable.row[col.field as keyof typeof propsTable.row] }}</span>
+                        propsTable.row[col.field as keyof typeof propsTable.row] }}
+                        <q-tooltip>{{ col.format ? col.format(propsTable.row[col.field as
+                            keyof typeof
+                            propsTable.row],
+                            propsTable.row) :
+                            propsTable.row[col.field as keyof typeof propsTable.row] }}</q-tooltip></span>
                     <q-btn v-if="props.IsHierarchy && index === 0 && props.TypeView === 'hierarchy'"
                         :icon="propsTable.row.open ? 'arrow_drop_down' : 'arrow_right'" flat class="q-ml-sm"
                         @click.stop="emit('getChildren', propsTable.row)" />
@@ -19,7 +28,9 @@
                 :value="col.format(propsTable.row[col.field as keyof typeof propsTable.row], propsTable.row)" />
             <template v-else-if="col.name.includes('BOOLEAN')">
                 <!-- eslint-disable vue/no-mutating-props -->
-                <q-checkbox v-model="propsTable.row[col.field as keyof typeof propsTable.row]" disable />
+                <div class="row items-center justify-center">
+                    <q-checkbox v-model="propsTable.row[col.field as keyof typeof propsTable.row]" disable />
+                </div>
             </template>
         </q-td>
     </q-tr>
