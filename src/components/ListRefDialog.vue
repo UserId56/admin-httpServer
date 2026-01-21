@@ -7,8 +7,8 @@
             <q-list>
                 <router-link v-for="item in props.value" :key="item.id" target="_blank"
                     :to="`/${item.scheme}/${item.id}`">
-                    <q-chip class="non-selectable">
-                        {{ item.title }}
+                    <q-chip class="non-selectable ellipsis q-mb-sm" :label="item.title">
+                        <q-tooltip>{{ item.title }}</q-tooltip>
                     </q-chip>
                 </router-link>
             </q-list>
