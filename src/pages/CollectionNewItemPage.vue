@@ -5,10 +5,10 @@
             <q-card>
                 <q-card-section>
                     <!-- Форма для создания нового элемента -->
-                    <div v-for="(column, index) in columns" :key="index" class="q-mb-md">
+                    <div v-for="(column, index) in columns" :key="index" class="q-mb-md full-width">
                         <q-input v-if="column.data_type === 'STRING'" v-model="newItem[column.column_name]"
                             :label="column.display_name" :clearable="route.name !== 'collection-item'"
-                            :readonly="route.name === 'collection-item'" />
+                            :readonly="route.name === 'collection-item'" autogrow />
                         <q-input
                             v-else-if="column.data_type === 'INT' || column.data_type === 'BIGINT' || column.data_type === 'FLOAT' || column.data_type === 'MONEY'"
                             v-model.number="newItem[column.column_name]" :label="column.display_name" type="number"
@@ -34,10 +34,11 @@
                             :options="options[column.referenced_scheme] ?? []" @filter="filterFn"
                             :data-referenced_scheme="column.referenced_scheme">
                             <template v-slot:selected-item="opt">
-                                <q-chip :label="opt.opt.label" :key="opt.opt.value"
+                                <q-chip style="max-width: 500px;" :label="opt.opt.label" :key="opt.opt.value"
                                     :removable="route.name !== 'collection-item'" color="primary" text-color="white"
                                     remove-aria-label="Удалить"
                                     @remove="newItem[column.column_name] = Array.isArray(newItem[column.column_name]) ? newItem[column.column_name].filter((val: any) => val !== opt.opt.value) : null">
+                                    <q-tooltip>{{ opt.opt.label }}</q-tooltip>
                                 </q-chip>
                             </template>
                             <template v-slot:no-option>

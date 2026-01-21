@@ -1,10 +1,10 @@
 <template>
     <router-link target="_blank" v-for="item in countChips" :key="item.id" :to="`/${item.scheme}/${item.id}`">
-        <q-chip class="non-selectable">
-            {{ item.title }}
+        <q-chip class="non-selectable ellipsis" :label="item.title" style="max-width: calc(100%/3.5);">
+            <q-tooltip>{{ item.title }}</q-tooltip>
         </q-chip>
     </router-link>
-    <q-btn v-if="showBtn" size="md" flat rounded @click="handleClick">Все</q-btn>
+    <q-btn v-if="showBtn" size="md" flat rounded @click.stop="handleClick">Все</q-btn>
     <q-dialog v-model="dialog">
         <ListRefDialog :value="props.value" />
     </q-dialog>
@@ -48,3 +48,8 @@ const handleClick = () => {
 };
 
 </script>
+<style scoped lang="scss">
+.width-chip {
+    max-width: 90px;
+}
+</style>
