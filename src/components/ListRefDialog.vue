@@ -13,9 +13,9 @@
                 </router-link>
             </q-list>
         </q-card-section>
-        <q-card-action>
+        <q-card-section>
             <q-btn class="q-mb-md q-mr-md float-right" flat label="Закрыть" color="primary" v-close-popup />
-        </q-card-action>
+        </q-card-section>
     </q-card>
 </template>
 
