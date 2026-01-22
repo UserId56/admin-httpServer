@@ -3,14 +3,14 @@
         <q-card-section>
             <q-input v-model="user.username" label="Имя пользователя" clearable maxlength="64" counter
                 :readonly="route.name === 'users-item'" />
-            <q-input v-model="user.email" label="Email" clearable maxlength="255" counter
+            <q-input v-model="user.email" label="Email" clearable maxlength="64" counter
                 :readonly="route.name === 'users-item'" />
-            <q-input v-model="user.password" label="Пароль" type="password" clearable maxlength="255" counter
+            <q-input v-model="user.password" label="Пароль" type="password" clearable maxlength="64" counter
                 :readonly="route.name === 'users-item'" />
             <q-select v-model="user.role_id" emit-value map-options :options="roles" label="Роль" clearable
                 option-value="id" option-label="name" :readonly="route.name === 'users-item'" />
-            <q-input v-model="user.avatar" label="Аватар" type="file" accept="image/*" clearable maxlength="255" counter
-                :readonly="route.name === 'users-item'" />
+            <UpLoadFile auto-upload label="Аватар" class="q-mt-md" :value="user.avatar"
+                @removeFileCurrent="user.avatar = ''" type="image" accept="image/*" @update:value="newValue" />
             <q-input v-model="user.bio" label="Биография" type="text" clearable maxlength="255" counter
                 :readonly="route.name === 'users-item'" />
             <q-card-actions>
@@ -30,6 +30,7 @@ import { UserAPI, RoleAPI } from 'src/API';
 import { useSettingsStore } from 'src/stores/settings';
 import type { Users } from 'src/models/users';
 import type { Role } from 'src/models/roles';
+import UpLoadFile from 'src/components/UpLoadFile.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -38,12 +39,17 @@ const userId = ref<number | null>(null);
 
 let oldUser = {} as Users;
 
-const user = ref<Partial<Users>>({
+const user = ref<Users>({
     id: 0,
+    created_at: '',
+    updated_at: '',
     username: '',
     email: '',
     password: '',
-    role_id: 0,
+    role_id: settingsStore.getDefaultUserRoleId ?? 1,
+    role: '',
+    avatar: '',
+    bio: '',
 });
 
 const roles = ref<Array<Role>>([]);
@@ -58,17 +64,27 @@ onMounted(async () => {
         if (userData) {
             user.value = userData;
             oldUser = { ...userData };
+
         }
     } else {
         user.value = {
             id: 0,
+            created_at: '',
+            updated_at: '',
             username: '',
             email: '',
             password: '',
+            avatar: '',
+            role: '',
+            bio: '',
             role_id: settingsStore.getDefaultUserRoleId ?? 1,
         };
     }
 });
+
+const newValue = (value: string | null) => {
+    user.value.avatar = value as string;
+}
 
 const checkEditFields = (field: string): boolean => {
     console.log(oldUser[field as keyof Users], user.value[field as keyof Users]);
@@ -95,7 +111,7 @@ const onSave = async () => {
             }
         }
 
-        await UserAPI.updateUser(user.value.id as number, payload).then(async () => {
+        await UserAPI.updateUser(user.value.id, payload).then(async () => {
             await router.push({ name: 'users-item', params: { id: userId.value } });
         });
     }
@@ -105,6 +121,7 @@ watch(userId, async (newVal) => {
     const userData = await UserAPI.getUserById(newVal as number);
     if (userData) {
         user.value = userData;
+        user.value.avatar = userData.avatar;
     }
 });
 

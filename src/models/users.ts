@@ -4,8 +4,8 @@ export interface Users {
   updated_at: string;
   username: string;
   email: string;
-  avatar?: string | null;
-  bio?: string | null;
+  avatar: string | null;
+  bio: string | null;
   role_id: number;
   role: string;
   password?: string;
