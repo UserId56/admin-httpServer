@@ -271,9 +271,11 @@ const create = async () => {
     collection.value.view_data.field_options = viewData;
     try {
         if (route.name === 'collection-edit-collection') {
-            await SchemeAPI.updateScheme(collection.value);
-            await schemeStore.getSchemes();
-            await router.push({ name: 'collections' });
+            const result = await SchemeAPI.updateScheme(collection.value);
+            if (result) {
+                await schemeStore.getSchemes();
+                await router.push({ name: 'collections' });
+            }
         } else {
             delete collection.value.id;
             delete collection.value.CreatedAt;
@@ -317,7 +319,9 @@ const create = async () => {
                 pre_values: []
             };
             const result = await SchemeAPI.createScheme(collection.value);
-            if (result !== null) {
+            console.log('create collection result', result);
+            // @ts-expect-error -- ignore
+            if (result !== null && result.errror === undefined) {
                 await router.push({ name: 'collections' });
                 await schemeStore.getSchemes();
             }

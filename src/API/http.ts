@@ -52,7 +52,7 @@ export const setPermission = (permission: Array<string> | null) => {
 // Простейший обработчик ошибок (можно расширить)
 export const handleApiError = async (err: AxiosError) => {
   console.error('API Error:', err);
-  if (err.response?.status === 401) {
+  if (err.status === 401) {
     if (err.config?.url !== '/user/login') {
       const userStore = useUserStore();
       userStore.setNotAuth();
@@ -62,6 +62,16 @@ export const handleApiError = async (err: AxiosError) => {
       return;
     }
   }
+  // if (err.status === 403) {
+  //   const router = getAppRouter();
+  //   if (!router) return;
+  //   await router.push({ name: 'error403' });
+  // }
+  // if (err.status === 500) {
+  //   const router = getAppRouter();
+  //   if (!router) return;
+  //   await router.push({ name: 'error500' });
+  // }
   Notify.create({
     type: 'negative',
     message: (err.response?.data as APIError)?.error || err.code + ': ' + err.message,

@@ -93,12 +93,27 @@ const routes: RouteRecordRaw[] = [
     component: () => import('pages/LoginPage.vue'),
     meta: { title: 'Login' },
   },
+  {
+    name: 'error500',
+    path: '/500',
+    component: () => import('pages/500Page.vue'),
+  },
+  {
+    name: 'error404',
+    path: '/404',
+    component: () => import('pages/404Page.vue'),
+  },
+  {
+    name: 'error403',
+    path: '/403',
+    component: () => import('pages/403Page.vue'),
+  },
 
   // Always leave this as last one,
   // but you can also remove it
   {
     path: '/:catchAll(.*)*',
-    component: () => import('pages/ErrorNotFound.vue'),
+    component: () => import('pages/404Page.vue'),
   },
 ];
 
