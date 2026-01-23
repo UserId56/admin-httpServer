@@ -80,6 +80,11 @@ const routes: RouteRecordRaw[] = [
         path: '/roles/:id',
         component: () => import('pages/RoleNewPage.vue'),
       },
+      {
+        name: 'settings',
+        path: '/settings',
+        component: () => import('pages/SettingsPage.vue'),
+      },
     ],
   },
   {
