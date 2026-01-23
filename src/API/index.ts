@@ -4,3 +4,4 @@ export * as ObjectAPI from './object';
 export * as RoleAPI from './roles';
 export * as UserAPI from './users';
 export * as SettingsAPI from './settings';
+export * as FileAPI from './files';

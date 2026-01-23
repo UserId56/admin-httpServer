@@ -17,7 +17,7 @@ export function ShortViewPars(
     }
     names.forEach((name) => {
       for (const itemData of dataRefScheme) {
-        if (itemData.id === value) {
+        if (itemData.id === value || itemData.file_id === value) {
           const value = itemData[name as keyof typeof itemData];
           strData = strData.replace(`{${name}}`, value ? String(value) : '');
         }

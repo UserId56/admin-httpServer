@@ -37,10 +37,12 @@
                     label="Сортировка" />
                 <!-- @vue-expect-error -->
                 <q-checkbox v-model="collectionDataProvided.columns[currentRowIndex as number].field_options.hidden"
-                    label="Скрыть" />
+                    label="Скрыть"
+                    :disable="collectionDataProvided.columns[currentRowIndex as number]?.data_type === 'ref files'" />
                 <!-- @vue-expect-error -->
                 <q-checkbox v-model="collectionDataProvided.columns[currentRowIndex as number].field_options.filterable"
-                    label="В фильтре" />
+                    label="В фильтре"
+                    :disable="collectionDataProvided.columns[currentRowIndex as number]?.data_type === 'ref files'" />
                 <div class="q-mt-md">
                     <!-- @vue-expect-error -->
                     <div
@@ -68,7 +70,7 @@
                     <!-- @vue-expect-error -->
                     <q-btn label="Добавить предустановленное значение" @click="collectionDataProvided.columns[currentRowIndex as number].field_options.pre_values.push({
                         label: '', value: ''
-                    })" />
+                    })" :disable="collectionDataProvided.columns[currentRowIndex as number]?.data_type !== 'STRING'" />
                 </div>
             </q-card-section>
 
@@ -111,6 +113,10 @@ const currentRow = ref<any>(null);
 const openDialog = (row: any, rowIndex: number) => {
     currentRowIndex.value = rowIndex;
     currentRow.value = row;
+    if (collectionDataProvided.value.columns[rowIndex]?.data_type === 'ref files') {
+        collectionDataProvided.value.columns[rowIndex].field_options.hidden = true;
+        collectionDataProvided.value.columns[rowIndex].field_options.filterable = false;
+    }
     dialog.value = true;
 };
 const showError = ref(false);

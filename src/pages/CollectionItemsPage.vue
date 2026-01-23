@@ -10,7 +10,7 @@
 <script lang="ts" setup>
 import TableElement from 'components/TableElements.vue';
 import type { Column } from 'components/TableElements.vue';
-import { ObjectAPI, SchemeAPI, UserAPI } from '../API';
+import { ObjectAPI, SchemeAPI, UserAPI, FileAPI } from '../API';
 import { useRoute, useRouter } from 'vue-router';
 import { ref, onMounted, watch, computed } from 'vue';
 import type { Scheme, Column as SchemeColumn } from 'src/models/scheme';
@@ -298,28 +298,40 @@ const getPageData = async () => {
         }
         for (const key of Object.keys(refCollectionData)) {
             const value = refCollectionData[key as keyof typeof refCollectionData];
-            let data = {};
-            if (key === 'users') {
-                // @ts-expect-error SUKA
-                data = await UserAPI.getUsers({
-                    where: [{
-                        field: 'id',
-                        operator: 'in',
-                        value: [...new Set(value)]
-                    }],
-                })
-            } else {
-                data = await ObjectAPI.getObject(key, {
-                    where: [{
-                        field: 'id',
-                        operator: 'in',
-                        value: [...new Set(value)]
-                    }],
-                });
+            let data = {
+                data: []
+            };
+            switch (key) {
+                case 'files':
+                    for (const fileId of value as Array<string>) {
+                        const fileData = await FileAPI.getFileMetaById(fileId);
+                        if (fileData) {
+                            // @ts-expect-error бесит
+                            data.data.push(fileData.data);
+                        }
+                    }
+                    break;
+                case 'users':
+                    // @ts-expect-error бесит
+                    data = await UserAPI.getUsers({
+                        where: [{
+                            field: 'id',
+                            operator: 'in',
+                            value: [...new Set(value)]
+                        }],
+                    })
+                    break;
+                default:
+                    data = await ObjectAPI.getObject(key, {
+                        where: [{
+                            field: 'id',
+                            operator: 'in',
+                            value: [...new Set(value)]
+                        }],
+                    });
             }
-            // @ts-expect-error SUKA
             if (data && data.data) {
-                // @ts-expect-error SUKA
+                // @ts-expect-error бесит
                 fetchCollectionData[key] = data.data;
             }
         }
@@ -382,6 +394,9 @@ const initCollection = async () => {
                                     shortView = scheme.view_data.short_view || '{id}';
                                     break;
                                 }
+                            }
+                            if (field.referenced_scheme === 'files') {
+                                shortView = '{name}';
                             }
                             const result = ShortViewPars(shortView, field.column_name, row, field.is_multiple, fetchCollectionData[field.referenced_scheme as keyof typeof fetchCollectionData], field.referenced_scheme as string);
                             return result;

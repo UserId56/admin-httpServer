@@ -51,6 +51,7 @@ export const setPermission = (permission: Array<string> | null) => {
 
 // Простейший обработчик ошибок (можно расширить)
 export const handleApiError = async (err: AxiosError) => {
+  console.error('API Error:', err);
   if (err.response?.status === 401) {
     if (err.config?.url !== '/user/login') {
       const userStore = useUserStore();

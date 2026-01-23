@@ -1,5 +1,6 @@
 <template>
-    <router-link target="_blank" v-for="item in countChips" :key="item.id" :to="`/${item.scheme}/${item.id}`">
+    <router-link target="_blank" v-for="item in countChips" :key="item.id"
+        :to="`/collections/${item.scheme}/${item.id}`" @click.stop>
         <q-chip class="non-selectable ellipsis" :label="item.title" style="max-width: calc(100%/3.5);">
             <q-tooltip>{{ item.title }}</q-tooltip>
         </q-chip>

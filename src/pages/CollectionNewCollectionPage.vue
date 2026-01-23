@@ -262,6 +262,10 @@ const create = async () => {
     }
     const viewData: Record<string, FieldOptions> = {};
     for (const col of collection.value.columns || []) {
+        if (col.data_type === 'ref' && col.referenced_scheme === 'files') {
+            col.field_options.hidden = true;
+            col.field_options.filterable = false;
+        }
         viewData[col.column_name] = col.field_options;
     }
     collection.value.view_data.field_options = viewData;

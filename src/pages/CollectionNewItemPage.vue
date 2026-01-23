@@ -25,7 +25,8 @@
                             v-model="newItem[column.column_name]" type="date"
                             :clearable="route.name !== 'collection-item'"
                             :readonly="route.name === 'collection-item'" />
-                        <q-select v-else-if="column.data_type === 'ref'" v-model="newItem[column.column_name]"
+                        <q-select v-else-if="column.data_type === 'ref' && column.referenced_scheme !== 'files'"
+                            v-model="newItem[column.column_name]"
                             :use-input="(!newItem[column.column_name] || column.is_multiple) ? true : false"
                             input-debounce="500" emit-value map-options :multiple="column.is_multiple" use-chips
                             @new-value="createValue" new-value-mode="toggle" :label="column.display_name"
@@ -49,6 +50,10 @@
                                 </q-item>
                             </template>
                         </q-select>
+                        <UpLoadFile v-else-if="column.data_type === 'ref' && column.referenced_scheme === 'files'"
+                            :value="newItem[column.column_name]" :multiple="column.is_multiple" autoUpload
+                            :label="column.display_name" @update:value="updateValueFile($event, column.column_name)">
+                        </UpLoadFile>
                     </div>
                 </q-card-section>
                 <q-card-actions>
@@ -72,6 +77,7 @@ import { SchemeAPI, ObjectAPI, UserAPI } from '../API';
 import { Notify, Loading } from 'quasar';
 import { useSchemeStore } from 'src/stores/scheme-store';
 import { GetIncludeFields, GetNameAsShortView } from 'src/helpers/ShortViewPars';
+import UpLoadFile from 'src/components/UpLoadFile.vue';
 const schemeStore = useSchemeStore();
 const route = useRoute();
 const router = useRouter();
@@ -89,6 +95,10 @@ const addSelect = (scheme: string) => {
 
 const createValue = (val: string, done: any) => {
     done();
+};
+
+const updateValueFile = (fileIds: string | Array<number>, columnName: string) => {
+    newItem.value[columnName] = fileIds;
 };
 
 const refInput = ref<{ [key: string]: QSelect | null }>({});
@@ -117,6 +127,9 @@ const filterFn = async (
             return;
         }
         const listOptions: Array<{ label: string; value: any }> = [];
+        if (selRef.$attrs['data-referenced_scheme'] === "files") {
+            return;
+        }
         const result = await getData(selRef.$attrs['data-referenced_scheme'] as string, false, inputValue);
         if (result) {
             for (const item of result.data) {
@@ -130,6 +143,9 @@ const filterFn = async (
 };
 
 const getData = async (refColection: string, refData?: boolean, search?: string): Promise<any> => {
+    if (refColection === 'files') {
+        return null;
+    }
     if (schemeStore.getList.length === 0) {
         await schemeStore.getSchemes();
     }
