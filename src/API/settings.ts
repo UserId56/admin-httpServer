@@ -22,3 +22,13 @@ export const updateSettings = async (settings: Settings): Promise<Settings | nul
     return null;
   }
 };
+
+export const getStyle = async (): Promise<string | null> => {
+  try {
+    const resp = await api.get<{ style: string }>('/settings/style/');
+    return resp.data.style;
+  } catch (err) {
+    await handleApiError(err as AxiosError);
+    return null;
+  }
+};

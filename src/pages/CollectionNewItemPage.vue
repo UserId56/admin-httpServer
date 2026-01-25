@@ -1,6 +1,7 @@
 <template>
     <q-page class="q-pa-md column">
-        <div class="text-h5 q-mb-md q-py-md">Создание нового элемента в {{ schemeData.displayName }}</div>
+        <div class="text-h5 q-mb-md q-py-md">Создание нового элемента в {{ schemeData.displayName }}
+        </div>
         <q-form>
             <q-card>
                 <q-card-section>

@@ -1,4 +1,5 @@
 <template>
+    <component :is="'style'">{{ styleScoped }}</component>
     <q-editor v-model:model-value="value" :readonly="props.readonly" :definitions="definitions" :toolbar="toolbar"
         ref="EditorRef" paragraph-tag="p" @keydown.enter="nextLineParagraph" @keydown="nextElement" :fonts="{
             arial: 'Arial',
@@ -9,7 +10,7 @@
             lucida_grande: 'Lucida Grande',
             times_new_roman: 'Times New Roman',
             verdana: 'Verdana'
-        }" @contextmenu.stop="showContextMenu" @update:model-value="setValue">
+        }" @contextmenu.stop="showContextMenu" @update:model-value="setValue" content-class="my-editor-content">
 
     </q-editor>
     <ContextMenu :items="contextMenuItems" @refMenu="setMenuRef" />
@@ -32,12 +33,27 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import type { QMenu } from 'quasar';
 import { QEditor, Dialog, useQuasar } from 'quasar';
 import { FileAPI } from 'src/API';
 import ContextMenu from './ContextMenu.vue';
 import type { ContextMenuProps } from './ContextMenu.vue';
+import { serialize, compile, middleware, stringify } from 'stylis';
+import { useSettingsStore } from 'src/stores/settings';
+
+const settingsStore = useSettingsStore();
+const styleScoped = ref('');
+
+const scopeCss = (rawCss: string, scope: string) => {
+    // compile превращает строку в дерево (AST)
+    // Мы оборачиваем входной CSS в наш scope-класс
+    const result = serialize(
+        compile(`${scope} { ${rawCss} }`),
+        middleware([stringify])
+    );
+    return result;
+};
 
 const $q = useQuasar();
 
@@ -503,7 +519,13 @@ const definitions = {
 
 // Fuctions for Definitions -------------------------------------------------------------
 
-
+// onMounted ---------------------------------------------------------------------
+onMounted(() => {
+    const styleData = settingsStore.getStyle;
+    if (styleData && styleData.length > 0) {
+        styleScoped.value = scopeCss(styleData, '.my-editor-content');
+    }
+});
 </script>
 
 <style>
