@@ -9,10 +9,10 @@
                 :readonly="route.name === 'users-item'" />
             <q-select v-model="user.role_id" emit-value map-options :options="roles" label="Роль" clearable
                 option-value="id" option-label="name" :readonly="route.name === 'users-item'" />
-            <UpLoadFile auto-upload label="Аватар" class="q-mt-md" :value="user.avatar"
+            <UpLoadFile auto-upload label="Аватар" class="q-mt-md q-mb-md" :value="user.avatar"
                 @removeFileCurrent="user.avatar = ''" type="image" accept="image/*" @update:value="newValue" />
-            <q-input v-model="user.bio" label="Биография" type="text" clearable maxlength="255" counter
-                :readonly="route.name === 'users-item'" />
+            <EditorComponent label="Биография" :readonly="route.name === 'users-item'"
+                @update:model-value="(val) => user.bio = val" :inValue="user.bio as string" />
             <q-card-actions>
 
                 <q-btn label="Сохранить" color="primary" @click="onSave"
@@ -31,6 +31,7 @@ import { useSettingsStore } from 'src/stores/settings';
 import type { Users } from 'src/models/users';
 import type { Role } from 'src/models/roles';
 import UpLoadFile from 'src/components/UpLoadFile.vue';
+import EditorComponent from 'src/components/EditorComponent.vue';
 
 const router = useRouter();
 const route = useRoute();
