@@ -54,6 +54,10 @@
                             :value="newItem[column.column_name]" :multiple="column.is_multiple" autoUpload
                             :label="column.display_name" @update:value="updateValueFile($event, column.column_name)">
                         </UpLoadFile>
+                        <EditorComponent v-else-if="column.data_type === 'TEXT'" :inValue="newItem[column.column_name]"
+                            :readonly="route.name === 'collection-item'"
+                            @update:model-value="(val) => newItem[column.column_name] = val" />
+
                     </div>
                 </q-card-section>
                 <q-card-actions>
@@ -78,6 +82,7 @@ import { Notify, Loading } from 'quasar';
 import { useSchemeStore } from 'src/stores/scheme-store';
 import { GetIncludeFields, GetNameAsShortView } from 'src/helpers/ShortViewPars';
 import UpLoadFile from 'src/components/UpLoadFile.vue';
+import EditorComponent from 'src/components/EditorComponent.vue';
 const schemeStore = useSchemeStore();
 const route = useRoute();
 const router = useRouter();
@@ -92,6 +97,8 @@ const options = ref<{ [key: string]: Array<{ label: string; value: any }> }>({})
 const addSelect = (scheme: string) => {
     refInput.value[scheme]?.updateInputValue('');
 };
+
+const clean = (s: any) => s.replace(/\0/g, '');
 
 const createValue = (val: string, done: any) => {
     done();
@@ -263,6 +270,10 @@ const createNewItem = async (recover: boolean = false) => {
                     notValid = true;
                     return;
                 }
+            }
+            if (column.data_type === 'TEXT') {
+                const textValue = newItem.value[column.column_name];
+                newItem.value[column.column_name] = clean(textValue);
             }
         });
         if (notValid) {
