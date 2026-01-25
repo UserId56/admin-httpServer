@@ -7,6 +7,7 @@ export const useSettingsStore = defineStore('settings', {
     lang: ['ru'] as Array<string>,
     time_zone: 0 as number,
     default_role_id: null as number | null,
+    style: '',
   }),
   getters: {
     getLang(): Array<string> {
@@ -20,6 +21,9 @@ export const useSettingsStore = defineStore('settings', {
     },
     getDefaultUserRoleId(): number | null {
       return this.default_role_id;
+    },
+    getStyle(): string {
+      return this.style;
     },
   },
   actions: {

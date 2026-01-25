@@ -15,6 +15,8 @@
                 <q-input v-model.number="settings.time_zone" type="number" label="Часовой пояс"
                     hint="Указывать только число в качестве часового смещения"
                     :error="errorShow && showErrTimeZone()"></q-input>
+                <q-input v-model="settings.style" type="text" label="Стиль интерфейса" clearable
+                    hint="Не используйте строчные комментарии, превращаются в одну строку"></q-input>
                 <q-card-actions class="q-mt-md">
                     <q-btn label="Сохранить" color="primary" @click="saveSettings" />
                     <q-btn label="Отмена" color="secondary" :to="'/'" />
@@ -49,6 +51,8 @@ onMounted(async () => {
         // @ts-expect-error бесит
         optionsRole.value = rolesResult.map(role => ({ label: role.name, value: role.id }));
     }
+    // Применяем стиль
+
 });
 
 const saveSettings = async () => {
