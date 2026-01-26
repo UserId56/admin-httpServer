@@ -81,12 +81,14 @@ import { useRoute, useRouter } from 'vue-router';
 import { SchemeAPI, ObjectAPI, UserAPI } from '../API';
 import { Notify, Loading } from 'quasar';
 import { useSchemeStore } from 'src/stores/scheme-store';
+import { useUserStore } from 'src/stores/user-store';
 import { GetIncludeFields, GetNameAsShortView } from 'src/helpers/ShortViewPars';
 import UpLoadFile from 'src/components/UpLoadFile.vue';
 import EditorComponent from 'src/components/EditorComponent.vue';
 const schemeStore = useSchemeStore();
 const route = useRoute();
 const router = useRouter();
+const UserStore = useUserStore();
 const collectionName = route.params.name as string;
 const schemeData = ref<any>({});
 const columns = ref<Array<any>>([]);
@@ -98,6 +100,8 @@ const options = ref<{ [key: string]: Array<{ label: string; value: any }> }>({})
 const addSelect = (scheme: string) => {
     refInput.value[scheme]?.updateInputValue('');
 };
+
+const permission = UserStore.permission;
 
 const clean = (s: any) => s.replace(/\0/g, '');
 
@@ -198,6 +202,9 @@ onMounted(async () => {
         if (column.column_name === 'id' || column.column_name === 'created_at' || column.column_name === 'updated_at' || column.column_name === 'deleted_at' || column.column_name === 'owner_id') {
             continue;
         }
+        if (permission && permission[`${collectionName}.${column.column_name}.GET`] === false) {
+            continue;
+        }
         columns.value.push(column);
     }
     if ((route.name === 'collection-item-edit' || route.name === 'collection-item') && route.params.id) {
@@ -274,7 +281,10 @@ const createNewItem = async (recover: boolean = false) => {
             }
             if (column.data_type === 'TEXT') {
                 const textValue = newItem.value[column.column_name];
-                newItem.value[column.column_name] = clean(textValue);
+                if (column.column_name in newItem.value) {
+                    newItem.value[column.column_name] = clean(textValue);
+                }
+
             }
         });
         if (notValid) {
