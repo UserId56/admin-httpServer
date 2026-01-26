@@ -4,7 +4,7 @@ export interface Role {
   updatedAt?: string | Date;
   deletedAt?: string | null;
   name: string;
-  permission: string[];
+  permission: Record<string, boolean>;
 }
 
 export default Role;

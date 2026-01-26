@@ -362,7 +362,7 @@ const initCollection = async () => {
         // Формируем колонки таблицы на основе полей схемы
         if (data.columns) {
             data.columns.forEach((field: SchemeColumn) => {
-                if (permission && permission.includes(`${collectionName.value}.${field.column_name}.forbidden`)) {
+                if (permission && permission[`${collectionName.value}.${field.column_name}.GET`] === false) {
                     return;
                 }
                 include.push(field.column_name);

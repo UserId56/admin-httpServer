@@ -8,14 +8,21 @@
         </q-card-section>
         <q-card-section>
             <div class="text-h6 q-pa-sm" v-show="rolePermissions.length > 0">Права роли:</div>
-            <q-input class="q-pa-sm" v-for="(_, index) in rolePermissions" :key="index" v-model="rolePermissions[index]"
-                :readonly="route.name === 'roles-item'">
-                <template v-slot:append>
-                    <q-btn flat round dense icon="delete" color="negative" @click="rolePermissions.splice(index, 1)"
-                        v-if="route.name === 'roles-item-new' || route.name === 'roles-item-edit'"></q-btn>
-                </template>
-            </q-input>
-            <q-btn label="Добавить право" color="deep-orange-9" @click="rolePermissions.push('newPermission.GET')"
+            <div v-for="(item, index) in rolePermissions" :key="index" class="row items-center permission">
+                <q-input class="q-pa-sm col-8" v-model="item.name" :readonly="route.name === 'roles-item'">
+                </q-input>
+                <q-checkbox v-model="item.permission" :disable="route.name === 'roles-item'">
+                    <q-tooltip>
+                        Разрешить или запретить
+                    </q-tooltip>
+                </q-checkbox>
+                <q-icon size="sm" name="delete" color="negative" @click="rolePermissions.splice(index, 1)"
+                    v-if="route.name === 'roles-item-new' || route.name === 'roles-item-edit'"
+                    class="cursor-pointer"></q-icon>
+
+            </div>
+            <q-btn label="Добавить право" color="deep-orange-9"
+                @click="rolePermissions.push({ name: 'newPermission.GET', permission: false })"
                 v-if="route.name === 'roles-item-new' || route.name === 'roles-item-edit'"></q-btn>
 
         </q-card-section>
@@ -37,15 +44,23 @@ import type Role from 'src/models/roles';
 const router = useRouter();
 const route = useRoute();
 
+interface RolePermission {
+    name: string;
+    permission: boolean;
+}
+
 const roleId = ref<number | null>(null);
 const roleName = ref('');
-const rolePermissions = ref<Array<string>>([]);
+const rolePermissions = ref<Array<RolePermission>>([]);
 
 const onSave = async () => {
     const newRole = {
         name: roleName.value,
-        permission: rolePermissions.value,
+        permission: {},
     } as Partial<Role>;
+    rolePermissions.value.forEach((perm) => {
+        newRole.permission![perm.name] = perm.permission;
+    });
     if (route.name === 'roles-item-new') {
         await RoleAPI.createRole(newRole).then(async (data: any) => {
             roleId.value = data.id as number;
@@ -72,7 +87,14 @@ watch(roleId, async (newVal) => {
     const roleData = await RoleAPI.getRoleById(newVal as number);
     if (roleData) {
         roleName.value = roleData.name;
-        rolePermissions.value = roleData.permission || [];
+        for (const [permName, permValue] of Object.entries(roleData.permission || {})) {
+            rolePermissions.value.push({ name: permName, permission: permValue });
+        }
     }
 });
 </script>
+<style scoped lang="scss">
+.permission {
+    width: 400px;
+}
+</style>
