@@ -43,7 +43,7 @@ export const loadStoredToken = async (): Promise<boolean> => {
   }
 };
 
-export const setPermission = (permission: Array<string> | null) => {
+export const setPermission = (permission: Record<string, boolean> | null) => {
   LocalStorage.set('permission', permission ? JSON.stringify(permission) : '[]');
   const userStore = useUserStore();
   userStore.setPermission(permission);

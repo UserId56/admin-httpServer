@@ -7,7 +7,7 @@ import type Role from 'src/models/roles';
 
 // Методы API для аутентификации
 
-const getRolePermissions = async (roleId: number): Promise<Array<string> | null> => {
+const getRolePermissions = async (roleId: number): Promise<Record<string, boolean> | null> => {
   try {
     const resp = await api.get<Role>(`/role/` + roleId);
     return resp.data.permission;

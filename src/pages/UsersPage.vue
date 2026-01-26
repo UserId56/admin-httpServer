@@ -51,7 +51,7 @@ onMounted(async () => {
             if (col.column_name === 'password') {
                 continue
             }
-            if (permission && permission.includes(`user.${col.column_name}.forbidden`)) {
+            if (permission && permission[`user.${col.column_name}.GET`] === false) {
                 continue;
             }
             columns.value.push({
