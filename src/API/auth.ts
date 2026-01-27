@@ -33,16 +33,6 @@ export const login = async (params: LoginParams): Promise<User | null> => {
   }
 };
 
-export const logout = async () => {
-  try {
-    await api.post('/user/logout');
-  } catch (err) {
-    await handleApiError(err as AxiosError);
-  } finally {
-    setAuthToken(null);
-  }
-};
-
 export const getProfile = async (): Promise<UserProfile | null | AxiosError> => {
   try {
     const resp = await api.get<UserProfile>('/user/profile');

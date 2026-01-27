@@ -17,7 +17,11 @@ export const useUserStore = defineStore('user', {
     isAuth: false,
     permission: null as Record<string, boolean> | null,
   }),
-  getters: {},
+  getters: {
+    getUser(): User | null {
+      return this.user;
+    },
+  },
   actions: {
     async login(data: LoginParams) {
       try {
@@ -30,9 +34,6 @@ export const useUserStore = defineStore('user', {
         //   Переход на страницу ошибки
         console.error('Login error:', error);
       }
-    },
-    async logout() {
-      await AuthAPI.logout();
     },
     async getProfile() {
       const profile = await AuthAPI.getProfile();
