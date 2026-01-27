@@ -97,6 +97,15 @@ const checkEditFields = (field: string): boolean => {
 
 const onSave = async () => {
     if (route.name === 'users-item-new') {
+        // @ts-expect-error Бесит
+        delete user.value['id'];
+        // @ts-expect-error Бесит
+        delete user.value['created_at'];
+        // @ts-expect-error Бесит
+        delete user.value['updated_at'];
+        // @ts-expect-error Бесит
+        delete user.value['role'];
+
         await UserAPI.createUser(user.value as Users).then(async (data: any) => {
             userId.value = data.id;
             await router.push({ name: 'users-item', params: { id: userId.value } });
