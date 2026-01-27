@@ -41,6 +41,7 @@
             </div>
         </template>
         <template #body="propsTable">
+            {{ console.log("Table render") }}
             <TableRow :propsTable="propsTable" :IsHierarchy="props.IsHierarchy" :TypeView="TypeView"
                 :localSelected="selectedLocal" @go="go" @addSelected="addSelected" @getChildren="getChildren" />
         </template>

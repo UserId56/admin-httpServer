@@ -59,8 +59,9 @@ const EditView = (type: 'all' | 'hierarchy') => {
 const getViewType = (): boolean => {
     const SchemeTypeView = LocalStorage.getItem('SchemeTypeView');
     if (SchemeTypeView) {
-        if (TypeView.value != SchemeTypeView[route.params.name as keyof typeof SchemeTypeView]) {
-            TypeView.value = SchemeTypeView[route.params.name as keyof typeof SchemeTypeView];
+        const newType = SchemeTypeView[route.params.name as keyof typeof SchemeTypeView]
+        if (newType && TypeView.value != newType) {
+            TypeView.value = newType;
             return true;
         }
     }
@@ -259,6 +260,7 @@ const getPageData = async () => {
     if (objectsData) {
         if (!objectsData.data) {
             row.value = [];
+            return;
         }
         for (const r of objectsData.data) {
             for (const col of schemeData.value.columns || []) {
