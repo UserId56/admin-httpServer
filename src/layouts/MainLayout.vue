@@ -4,9 +4,25 @@
       <q-toolbar>
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
 
-        <q-toolbar-title> Quasar App </q-toolbar-title>
+        <q-toolbar-title> {{ projectName }} </q-toolbar-title>
 
-        <div>Quasar v{{ $q.version }}</div>
+        <q-btn round><q-avatar>
+            <q-img :src="`/api/v1/file/get/${user?.avatar}`" v-if="user?.avatar"
+              :alt="user?.username || 'User avatar'" />
+            <q-icon name="mdi-account-circle" v-else class="text-h4" />
+          </q-avatar>
+          <q-menu transition-show="scale" transition-hide="scale" style="width: 150px;" anchor="bottom right"
+            self="top right">
+            <q-list>
+              <q-item clickable v-ripple :to="`/users/${user?.id}/edit`" class="overflow-hidden full-width">
+                <q-item-section class="ellipsis">{{ user?.username || "Мой профиль"
+                }}</q-item-section>
+              </q-item>
+              <q-item clickable v-ripple @click="logout">
+                <q-item-section>Выйти</q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu></q-btn>
       </q-toolbar>
     </q-header>
 
@@ -29,8 +45,22 @@
 import { ref, computed, onMounted } from 'vue';
 import LeftMenuItemComponent, { type LeftMenuItem } from 'components/LeftMenuItem.vue';
 import { useSchemeStore } from 'src/stores/scheme-store';
+import { useSettingsStore } from 'src/stores/settings';
+import { useUserStore } from 'src/stores/user-store';
+import { useRouter } from 'vue-router';
 
 const schemeStore = useSchemeStore();
+const settingsStore = useSettingsStore();
+const userStore = useUserStore();
+const router = useRouter();
+
+const logout = async () => {
+  userStore.setNotAuth();
+  await router.push({ name: 'login' });
+}
+
+const projectName = computed(() => settingsStore.getProjectName || 'Admin Panel');
+const user = computed(() => userStore.getUser);
 
 const linksLeftMenu = computed<LeftMenuItem[]>(() => {
   const collections = schemeStore.ListSchemes

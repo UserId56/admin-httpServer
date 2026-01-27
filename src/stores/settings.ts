@@ -8,6 +8,7 @@ export const useSettingsStore = defineStore('settings', {
     time_zone: 0 as number,
     default_role_id: null as number | null,
     style: '',
+    project_name: '',
   }),
   getters: {
     getLang(): Array<string> {
@@ -24,6 +25,9 @@ export const useSettingsStore = defineStore('settings', {
     },
     getStyle(): string {
       return this.style;
+    },
+    getProjectName(): string {
+      return this.project_name;
     },
   },
   actions: {
