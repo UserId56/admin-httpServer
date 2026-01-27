@@ -1,5 +1,6 @@
 <template>
-    <q-table class="full-width overflow-hidden-y" :rows="props.rows" :columns="columns"
+    <q-table virtual-scroll :virtual-scroll-slice-size="pagination.rowsPerPage + 10"
+        class="full-width overflow-hidden-y" :rows="props.rows" :columns="columns"
         :row-key="(row) => row.id ? row.id : row.ID"
         :selection="(route.name === 'collections' || route.name === 'roles') ? 'single' : 'multiple'"
         v-model:selected="selectedLocal" separator="cell" rows-per-page-label="Элементов на странице"
@@ -41,7 +42,6 @@
             </div>
         </template>
         <template #body="propsTable">
-            {{ console.log("Table render") }}
             <TableRow :propsTable="propsTable" :IsHierarchy="props.IsHierarchy" :TypeView="TypeView"
                 :localSelected="selectedLocal" @go="go" @addSelected="addSelected" @getChildren="getChildren" />
         </template>

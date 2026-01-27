@@ -1,6 +1,5 @@
 <template>
     <q-tr :props="propsTable" :class="styleClass" @click="goChildren(propsTable.row)">
-        {{ console.log("TR render") }}
         <q-td>
             <q-checkbox :model-value="checkSelected(propsTable.row)"
                 @update:model-value="emit('addSelected', propsTable.row)" @click.stop />
