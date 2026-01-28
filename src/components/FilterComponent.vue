@@ -1,24 +1,25 @@
 <template>
-    <div class="row items-center justify-end no-wrap">
-        <q-input v-model="filterData.search" label="Поиск" class="q-mr-md" dense></q-input>
+    <div class="row justify-end">
         <template v-for="col in colData" :key="col.column_name">
             <q-checkbox v-model="filterData[col.column_name]" v-if="col.data_type === 'BOOLEAN'"
                 :label="col.display_name" class="q-mr-md" dense></q-checkbox>
             <q-input v-model.trim="filterData[col.column_name]" type="text"
                 v-else-if="col.data_type === 'STRING' && col.data_type !== 'ref' || col.data_type === 'TEXT'"
                 :label="col.display_name" class="q-mr-md" dense>
-                <q-btn-dropdown dense color="primary" no-caps auto-close
-                    :label="(filterData.fieldOperatorOptions[col.column_name]) ? filterData.fieldOperatorOptions[col.column_name].label : '='">
-                    <q-list>
-                        <!-- @vue-expect-error -->
-                        <q-item clickable v-close-popup @click="selectOperator(value, col.column_name)"
-                            v-for="value in getOperators(col.data_type)" :key="value.label">
-                            <q-item-section>
-                                <q-item-label>{{ value.label }}</q-item-label>
-                            </q-item-section>
-                        </q-item>
-                    </q-list>
-                </q-btn-dropdown>
+                <template #append>
+                    <q-btn-dropdown dense color="primary" no-caps auto-close
+                        :label="(filterData.fieldOperatorOptions[col.column_name]) ? filterData.fieldOperatorOptions[col.column_name].label : '='">
+                        <q-list>
+                            <!-- @vue-expect-error -->
+                            <q-item clickable v-close-popup @click="selectOperator(value, col.column_name)"
+                                v-for="value in getOperators(col.data_type)" :key="value.label">
+                                <q-item-section>
+                                    <q-item-label>{{ value.label }}</q-item-label>
+                                </q-item-section>
+                            </q-item>
+                        </q-list>
+                    </q-btn-dropdown>
+                </template>
             </q-input>
             <q-input v-model.number="filterData[col.column_name]" type="number"
                 v-else-if="col.data_type === 'INT' || col.data_type === 'FLOAT' || col.data_type === 'BIGINT' || col.data_type === 'MONEY'"
@@ -36,8 +37,8 @@
                             </q-item>
                         </q-list>
                     </q-btn-dropdown>
-
-                </template></q-input>
+                </template>
+            </q-input>
             <q-select v-model="filterData[col.column_name]" v-else-if="col.data_type === 'ref'"
                 :label="col.display_name" emit-value map-options :options="options[col.referenced_scheme] ?? []"
                 new-value-mode="toggle" @new-value="createValue" :multiple="isMultiple(col.column_name)" use-input
@@ -77,9 +78,7 @@
                     </q-btn-dropdown>
                 </template>
             </q-select>
-
         </template>
-
     </div>
 </template>
 

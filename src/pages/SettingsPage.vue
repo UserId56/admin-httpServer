@@ -6,6 +6,7 @@
             </q-card-section>
             <q-separator></q-separator>
             <q-card-section>
+                <q-input v-model="settings.project_name" type="text" label="Название проекта" clearable></q-input>
                 <q-select v-model="settings.default_role_id" emit-value map-options :options="optionsRole"
                     label="Роль по умолчанию для новых пользователей" clearable option-value="value"
                     option-label="label" :error="errorShow && !settings.default_role_id" />

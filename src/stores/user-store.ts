@@ -21,6 +21,9 @@ export const useUserStore = defineStore('user', {
     getUser(): User | null {
       return this.user;
     },
+    getUserPermissions(): Record<string, boolean> | null {
+      return this.permission;
+    },
   },
   actions: {
     async login(data: LoginParams) {
