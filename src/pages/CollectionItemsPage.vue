@@ -13,7 +13,7 @@ import type { Column } from 'components/TableElements.vue';
 import { ObjectAPI, SchemeAPI, UserAPI, FileAPI } from '../API';
 import { useRoute, useRouter } from 'vue-router';
 import { ref, onMounted, watch, computed } from 'vue';
-import type { Scheme, Column as SchemeColumn } from 'src/models/scheme';
+import type { Scheme } from 'src/models/scheme';
 import type { ReqData } from 'src/models/query';
 import { Dialog, LocalStorage } from 'quasar';
 import { useUserStore } from 'src/stores/user-store';
@@ -363,7 +363,7 @@ const initCollection = async () => {
         schemeData.value = data;
         // Формируем колонки таблицы на основе полей схемы
         if (data.columns) {
-            data.columns.forEach((field: SchemeColumn) => {
+            for (const field of data.columns) {
                 if (permission && permission[`${collectionName.value}.${field.column_name}.GET`] === false) {
                     return;
                 }
@@ -407,7 +407,7 @@ const initCollection = async () => {
                         return val;
                     }
                 });
-            });
+            }
         }
         const loadPagination = LocalStorage.getItem(`${collectionName.value}-pagination`);
         const page = route.query.page;
@@ -416,7 +416,11 @@ const initCollection = async () => {
                 (loadPagination as typeof pagination.value).page = parseInt(page as string);
             }
             pagination.value = loadPagination as typeof pagination.value;
-            return;
+            if (kostyl2.value) {
+                kostyl2.value = false;
+            } else {
+                return;
+            }
         } else {
             pagination.value.sortBy = ''
         }
@@ -491,6 +495,10 @@ const handleRecoverRows = async () => {
 }
 
 watch(pagination, async (newValue, oldValue) => {
+    if (kostyl2.value) {
+        kostyl2.value = false;
+        return;
+    }
     if (newValue.page !== oldValue.page) {
         const target = {
             name: route.name as string,
@@ -515,8 +523,18 @@ watch(pagination, async (newValue, oldValue) => {
     }
 });
 
+const kostyl2 = ref(false)
+
 watch(collectionName, async (newName, oldName) => {
     if (newName !== oldName) {
+        kostyl2.value = true;
+        pagination.value = {
+            descending: true,
+            page: 1,
+            rowsPerPage: 25,
+            rowsNumber: 0,
+            sortBy: 'Костыль, не хочет работать ни как',
+        }
         await initCollection();
     }
 });

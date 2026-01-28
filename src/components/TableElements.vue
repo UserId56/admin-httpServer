@@ -1,27 +1,30 @@
 <template>
-    <q-table virtual-scroll :virtual-scroll-slice-size="pagination.rowsPerPage + 10"
-        class="full-width overflow-hidden-y" :rows="props.rows" :columns="columns"
-        :row-key="(row) => row.id ? row.id : row.ID"
+    <q-table virtual-scroll :virtual-scroll-slice-size="25 + 10" class="full-width overflow-hidden-y" :rows="props.rows"
+        :columns="columns" :row-key="(row) => row.id"
         :selection="(route.name === 'collections' || route.name === 'roles') ? 'single' : 'multiple'"
         v-model:selected="selectedLocal" separator="cell" rows-per-page-label="Элементов на странице"
         :pagination-label="setCountTitle" :rows-per-page-options="[25, 50, 100, 200, 500, 1000]"
         v-model:pagination="paginationProxy" @request="updatePag">
         <template #top>
             <div v-if="props.schemeData?.view_data && route.name !== 'roles' && route.name !== 'collections'"
-                class="row justify-end items-center no-wrap full-width q-my-md">
-                <FilterComponent :schemeData="props.schemeData as Scheme" @update="getFilters" />
-                <q-btn icon="search" size="md" flat @click="$emit('search', filters)"></q-btn>
+                class="row q-my-md items-start full-width">
+                <FilterComponent :schemeData="props.schemeData" @update="getFilters" class="col-10" />
+                <div class="col-2 row justify-end">
+                    <q-input v-model="filters.search" label="Поиск" class="q-mr-md" dense clearable></q-input>
+                    <q-btn icon="search" size="md" flat @click="$emit('search', filters)"></q-btn>
+                </div>
             </div>
             <div class="row items-center justify-between full-width">
                 <div class="text-h6 q-pa-sm">{{ props.title }}</div>
                 <q-btn-group>
-                    <q-btn color="positive" glossy no-caps label="Создать" :disable="disableBtn.create"
-                        @click="create" />
-                    <q-btn color="secondary" glossy no-caps label="Изменить" :disable="disableBtn.edit" @click="edit" />
+                    <q-btn color="positive" glossy no-caps label="Создать" :disable="disableBtn.create" @click="create"
+                        v-if="showBtn.create" />
+                    <q-btn color="secondary" glossy no-caps label="Изменить" :disable="disableBtn.edit" @click="edit"
+                        v-if="showBtn.edit" />
                     <q-btn color="negative" glossy no-caps label="Удалить" :disable="disableBtn.delete"
-                        @click="deleteElement" />
+                        @click="deleteElement" v-if="showBtn.delete" />
                     <q-btn color="deep-orange-9" glossy no-caps label="Восстановить" v-show="!disableBtn.recover"
-                        @click="recoverElement" />
+                        @click="recoverElement" v-if="showBtn.recover" />
                 </q-btn-group>
                 <q-space />
                 <q-btn-dropdown color="primary" :icon="TypeViewIcon" v-if="props.IsHierarchy">
@@ -55,8 +58,10 @@ import TableRow from './TableRow.vue';
 import FilterComponent from './FilterComponent.vue';
 import type { Scheme } from 'src/models/scheme';
 import type { QTableColumn } from 'quasar';
+import { useUserStore } from 'src/stores/user-store';
 const router = useRouter();
 const route = useRoute();
+const userStore = useUserStore();
 
 
 const columns = computed(() => {
@@ -156,6 +161,33 @@ const disableBtn = ref({
     delete: true,
     recover: true,
 });
+
+const showBtn = computed(() => {
+    const result = {
+        create: true,
+        edit: true,
+        delete: true,
+        recover: true,
+    };
+    const userPermissions = userStore.getUserPermissions;
+    const user = userStore.getUser;
+    const objName = props.schemeData?.name || '';
+    if (userPermissions) {
+        if (objName && userPermissions[`${objName}.POST`] === false && user?.role_id !== 1) {
+            result.create = false;
+        }
+        if (objName && userPermissions[`${objName}.PUT`] === false && user?.role_id !== 1) {
+            result.edit = false;
+        }
+        if (objName && userPermissions[`${objName}.DELETE`] === false && user?.role_id !== 1) {
+            result.delete = false;
+        }
+        if (objName && userPermissions[`${objName}.PUT`] === false && user?.role_id !== 1) {
+            result.recover = false;
+        }
+    }
+    return result;
+})
 
 // Сигнатура эмита (типы для TypeScript)
 const emit = defineEmits<{
